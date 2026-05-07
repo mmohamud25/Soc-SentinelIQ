@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SentinelIQ — Security Operations Platform</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #080c10; }
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+    @keyframes ping  { 75%,100% { transform:scale(2); opacity:0; } }
+    @keyframes pulse { 0%,100%  { opacity:1; } 50% { opacity:.4; } }
+    @keyframes fadeIn{ from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes spin  { to { transform:rotate(360deg); } }
+    .animate-ping   { animation: ping   1.5s cubic-bezier(0,0,.2,1) infinite; }
+    .animate-pulse  { animation: pulse  2s   cubic-bezier(.4,0,.6,1) infinite; }
+    .fade-in        { animation: fadeIn 0.3s ease forwards; }
+    .spin           { animation: spin   1s   linear infinite; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    // ── Config ── update SUPABASE_URL if you rename the project
+    const SUPABASE_URL  = "https://xkadqvmqxdyqoddiypet.supabase.co/functions/v1/ai-analyst";
+    const SUPABASE_ANON = ""; // optional: add your anon key if you enable JWT verification
+    const CISA_URL      = "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json";
+
+    const SEV = {
+      CRITICAL: { bg:"#ef444420", border:"#ef444460", text:"#f87171", dot:"#ef4444" },
+      HIGH:     { bg:"#f9731620", border:"#f9731660", text:"#fb923c", dot:"#f97316" },
+      MEDIUM:   { bg:"#eab30820", border:"#eab30860", text:"#fbbf24", dot:"#fbbf24" },
+      LOW:      { bg:"#06b6d420", border:"#06b6d460", text:"#22d3ee", dot:"#06b6d4" },
+    };
+
+    const MOCK_IOC = {
+      "8.8.8.8":        { safe:true,  score:0,  vendor:"Google LLC",    country:"US", reports:0,   tags:["DNS","Trusted"] },
+      "1.1.1.1":        { safe:true,  score:0,  vendor:"Cloudflare",    country:"US", reports:0,   tags:["DNS","Trusted"] },
+      "185.220.101.45": { safe:false, score:97, vendor:"Tor Exit Node", country:"DE", reports:312, tags:["TOR","Malicious","C2"] },
+      "45.33.32.156":   { safe:false, score:74, vendor:"Linode LLC",    country:"US", reports:89,  tags:["Scanner","Brute Force"] },
+    };
+
+    const ALERTS = [
+      { id:"ALT-001", severity:"CRITICAL", title:"Ransomware C2 Beacon Detected",      source:"EDR",      asset:"WS-FINANCE-04", ip:"185.220.101.45", time:"2m ago",  status:"Open",         tactic:"Command & Control", description:"Endpoint WS-FINANCE-04 established outbound connection to known Tor exit node on port 4444. Process tree: svchost.exe spawned cmd.exe. SHA256: d41d8cd98f00b204e9800998ecf8427e. Destination IP flagged in 312 abuse reports." },
+      { id:"ALT-002", severity:"HIGH",     title:"Lateral Movement via Pass-the-Hash", source:"SIEM",     asset:"DC-PROD-01",    ip:"10.0.1.45",      time:"8m ago",  status:"Investigating", tactic:"Lateral Movement",  description:"Multiple failed SMB auth attempts followed by successful NTLM auth from WS-HR-11 to DC-PROD-01. Admin credentials may be compromised. Event IDs 4624 and 4648 detected in sequence within 90 seconds." },
+      { id:"ALT-003", severity:"HIGH",     title:"Suspicious PowerShell Execution",    source:"EDR",      asset:"WS-HR-11",      ip:"10.0.1.22",      time:"15m ago", status:"Open",         tactic:"Execution",         description:"Base64-encoded PowerShell executed via Word macro. Downloads payload from external IP. Parent: WINWORD.EXE. Command: powershell -enc JABjAGwAaQBlAG4AdA... Likely phishing document vector." },
+      { id:"ALT-004", severity:"MEDIUM",   title:"Failed Login Spike (42 attempts)",   source:"SIEM",     asset:"VPN-GW-01",     ip:"45.33.32.156",   time:"22m ago", status:"Open",         tactic:"Credential Access", description:"42 failed SSH attempts from 45.33.32.156 in 3 minutes targeting VPN gateway. Username list: admin, root, user, administrator. IP flagged as scanner with 89 prior abuse reports." },
+      { id:"ALT-005", severity:"MEDIUM",   title:"Outbound Traffic to Known Bad IP",   source:"Firewall", asset:"WS-DEVOPS-02",  ip:"185.220.101.45", time:"31m ago", status:"Investigating", tactic:"Exfiltration",      description:"WS-DEVOPS-02 sent 2.3GB to flagged IP over 45 minutes via HTTPS port 443. Transfer began 02:14 UTC outside business hours. Destination associated with prior exfiltration campaigns." },
+      { id:"ALT-006", severity:"LOW",      title:"SSL Certificate Expiry Warning",     source:"Monitor",  asset:"api.internal",  ip:"10.0.0.5",       time:"1h ago",  status:"Open",         tactic:"N/A",               description:"SSL cert for api.internal expires in 7 days. Auto-renewal failed due to DNS mismatch between Let's Encrypt and internal resolver. Manual intervention required." },
+    ];
+
+    const FEEDS = [{ name:"CISA KEV",live:true },{ name:"AlienVault OTX",live:true },{ name:"AbuseIPDB",live:true },{ name:"VirusTotal",live:false }];
+    const MITRE = [{ tactic:"Command & Control",count:3,color:"#ef4444" },{ tactic:"Credential Access",count:2,color:"#f97316" },{ tactic:"Lateral Movement",count:1,color:"#eab308" },{ tactic:"Execution",count:1,color:"#fb923c" },{ tactic:"Exfiltration",count:1,color:"#a855f7" }];
+    const VCOLOR = { TRUE_POSITIVE:{c:"#f87171",bg:"rgba(239,68,68,0.12)",b:"rgba(239,68,68,0.3)"}, FALSE_POSITIVE:{c:"#4ade80",bg:"rgba(34,197,94,0.12)",b:"rgba(34,197,94,0.3)"}, BENIGN:{c:"#fbbf24",bg:"rgba(234,179,8,0.12)",b:"rgba(234,179,8,0.3)"} };
+
+    // ── Helpers ──────────────────────────────────────────────────────────────────
+    function Dot({ live }) {
+      return (
+        <span style={{ position:"relative",display:"inline-flex",width:10,height:10 }}>
+          <span className="animate-ping" style={{ position:"absolute",inset:0,borderRadius:"50%",background:live?"#22c55e":"#eab308",opacity:0.5 }}/>
+          <span style={{ position:"relative",width:8,height:8,borderRadius:"50%",margin:1,background:live?"#22c55e":"#eab308" }}/>
+        </span>
+      );
+    }
+
+    function Spinner() {
+      return <svg className="spin" width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="rgba(167,139,250,0.2)" strokeWidth="3"/><path d="M12 2a10 10 0 0110 10" stroke="#a78bfa" strokeWidth="3" strokeLinecap="round"/></svg>;
+    }
+
+    // ── AI Analyst ────────────────────────────────────────────────────────────────
+    function AIAnalyst({ alert }) {
+      const [status, setStatus] = useState("idle"); // idle | loading | done | error
+      const [parsed, setParsed] = useState(null);
+      const [errMsg, setErrMsg] = useState("");
+
+      useEffect(() => { setStatus("idle"); setParsed(null); setErrMsg(""); }, [alert?.id]);
+
+      const run = async () => {
+        setStatus("loading"); setParsed(null); setErrMsg("");
+        try {
+          const headers = { "Content-Type": "application/json" };
+          if (SUPABASE_ANON) headers["Authorization"] = `Bearer ${SUPABASE_ANON}`;
+
+          const res = await fetch(SUPABASE_URL, {
+            method: "POST",
+            headers,
+            body: JSON.stringify({ alert }),
+          });
+
+          const data = await res.json();
+          if (!res.ok || data.error) throw new Error(data.error || "Edge function error");
+          setParsed(data.analysis);
+          setStatus("done");
+        } catch (e) {
+          setErrMsg(e.message);
+          setStatus("error");
+        }
+      };
+
+      if (!alert) return null;
+      const vc = VCOLOR[parsed?.verdict] || VCOLOR.BENIGN;
+
+      return (
+        <div style={{ marginTop:16,borderTop:"1px solid rgba(255,255,255,0.06)",paddingTop:16 }}>
+          <div style={{ display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12 }}>
+            <div style={{ display:"flex",alignItems:"center",gap:8 }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" fill="#a78bfa"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5.636 5.636l2.121 2.121M16.243 16.243l2.121 2.121M5.636 18.364l2.121-2.121M16.243 7.757l2.121-2.121" stroke="#a78bfa" strokeWidth="1.5" strokeLinecap="round"/></svg>
+              <span style={{ fontSize:11,color:"#a78bfa",textTransform:"uppercase",letterSpacing:"0.1em" }}>AI Analyst</span>
+              {status==="loading" && <><Spinner/><span className="animate-pulse" style={{ fontSize:11,color:"#64748b" }}>Analyzing...</span></>}
+              {status==="done"    && <span style={{ fontSize:11,padding:"2px 8px",borderRadius:4,background:"rgba(34,197,94,0.1)",border:"1px solid rgba(34,197,94,0.3)",color:"#4ade80",fontFamily:"IBM Plex Mono" }}>Complete</span>}
+            </div>
+            {(status==="idle"||status==="error") &&
+              <button onClick={run} style={{ padding:"6px 14px",borderRadius:6,fontSize:11,fontFamily:"IBM Plex Mono",cursor:"pointer",background:"rgba(167,139,250,0.15)",border:"1px solid rgba(167,139,250,0.4)",color:"#a78bfa",display:"flex",alignItems:"center",gap:6 }}>
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21"/></svg>
+                Run AI Analysis
+              </button>
+            }
+            {status==="done" &&
+              <button onClick={()=>{setStatus("idle");setParsed(null);}} style={{ padding:"6px 14px",borderRadius:6,fontSize:11,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",color:"#64748b",cursor:"pointer",fontFamily:"IBM Plex Mono" }}>Re-run</button>
+            }
+          </div>
+
+          {status==="idle" &&
+            <div style={{ borderRadius:8,border:"1px solid rgba(167,139,250,0.15)",background:"rgba(167,139,250,0.04)",padding:12,fontSize:12,color:"#64748b" }}>
+              Click <strong style={{ color:"#a78bfa" }}>Run AI Analysis</strong> to trigger an autonomous investigation. Claude will assess the alert, map MITRE techniques, and generate a structured incident report.
+            </div>
+          }
+
+          {status==="loading" && (
+            <div style={{ borderRadius:8,border:"1px solid rgba(167,139,250,0.2)",background:"rgba(167,139,250,0.04)",padding:14,display:"flex",flexDirection:"column",gap:10 }}>
+              {["Routing alert to AI analyst...","Enriching IOC context...","Mapping MITRE ATT&CK techniques...","Generating incident report..."].map((s,i)=>(
+                <div key={i} className="animate-pulse" style={{ display:"flex",alignItems:"center",gap:8,fontSize:12,color:"#64748b",animationDelay:`${i*0.3}s` }}>
+                  <span style={{ width:5,height:5,borderRadius:"50%",background:"#a78bfa",display:"inline-block",flexShrink:0 }}/>
+                  {s}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {status==="error" &&
+            <div style={{ borderRadius:8,border:"1px solid rgba(239,68,68,0.3)",background:"rgba(239,68,68,0.05)",padding:12,fontSize:12,color:"#f87171" }}>
+              <strong>Error:</strong> {errMsg}
+              <div style={{ marginTop:6,fontSize:11,color:"#64748b" }}>Make sure the Edge Function is deployed and ANTHROPIC_API_KEY is set in Supabase.</div>
+            </div>
+          }
+
+          {status==="done" && parsed && (
+            <div className="fade-in" style={{ display:"flex",flexDirection:"column",gap:10 }}>
+              <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:8 }}>
+                <div style={{ borderRadius:8,border:`1px solid ${vc.b}`,background:vc.bg,padding:12 }}>
+                  <div style={{ fontSize:10,color:"#64748b",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:4 }}>Verdict</div>
+                  <div style={{ fontSize:15,fontWeight:700,fontFamily:"IBM Plex Mono",color:vc.c }}>{parsed.verdict?.replace("_"," ")}</div>
+                  <div style={{ fontSize:11,color:"#64748b",marginTop:2 }}>Confidence: {parsed.confidence}%</div>
+                </div>
+                <div style={{ borderRadius:8,border:"1px solid rgba(255,255,255,0.06)",background:"rgba(255,255,255,0.02)",padding:12 }}>
+                  <div style={{ fontSize:10,color:"#64748b",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:4 }}>Priority</div>
+                  <div style={{ fontSize:26,fontWeight:700,fontFamily:"IBM Plex Mono",color:parsed.priority_score>=8?"#f87171":parsed.priority_score>=5?"#fbbf24":"#4ade80" }}>{parsed.priority_score}<span style={{ fontSize:13,color:"#334155" }}>/10</span></div>
+                  {parsed.escalate && <div style={{ fontSize:11,color:"#f87171",marginTop:2 }}>⚠ Escalate now</div>}
+                </div>
+              </div>
+              <div style={{ borderRadius:8,border:"1px solid rgba(255,255,255,0.06)",background:"rgba(255,255,255,0.02)",padding:12 }}>
+                <div style={{ fontSize:10,color:"#64748b",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:6 }}>Summary</div>
+                <div style={{ fontSize:12,color:"#cbd5e1",lineHeight:1.7 }}>{parsed.summary}</div>
+              </div>
+              <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:8 }}>
+                <div style={{ borderRadius:8,border:"1px solid rgba(255,255,255,0.06)",background:"rgba(255,255,255,0.02)",padding:12 }}>
+                  <div style={{ fontSize:10,color:"#64748b",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:6 }}>MITRE ATT&CK</div>
+                  <div style={{ fontSize:12,color:"#e2e8f0",fontFamily:"IBM Plex Mono",marginBottom:3 }}>{parsed.mitre_tactic}</div>
+                  <div style={{ fontSize:11,color:"#94a3b8" }}>{parsed.mitre_technique}</div>
+                </div>
+                <div style={{ borderRadius:8,border:"1px solid rgba(255,255,255,0.06)",background:"rgba(255,255,255,0.02)",padding:12 }}>
+                  <div style={{ fontSize:10,color:"#64748b",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:6 }}>Root Cause</div>
+                  <div style={{ fontSize:12,color:"#cbd5e1",lineHeight:1.6 }}>{parsed.root_cause}</div>
+                </div>
+              </div>
+              <div style={{ borderRadius:8,border:"1px solid rgba(255,255,255,0.06)",background:"rgba(255,255,255,0.02)",padding:12 }}>
+                <div style={{ fontSize:10,color:"#64748b",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:6 }}>IOC Assessment</div>
+                <div style={{ fontSize:12,color:"#cbd5e1",lineHeight:1.7 }}>{parsed.ioc_assessment}</div>
+              </div>
+              <div style={{ borderRadius:8,border:"1px solid rgba(167,139,250,0.2)",background:"rgba(167,139,250,0.04)",padding:12 }}>
+                <div style={{ fontSize:10,color:"#a78bfa",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:10 }}>Recommended Actions</div>
+                {parsed.recommended_actions?.map((a,i)=>(
+                  <div key={i} style={{ display:"flex",alignItems:"flex-start",gap:8,marginBottom:8 }}>
+                    <span style={{ width:18,height:18,borderRadius:"50%",background:"rgba(167,139,250,0.15)",border:"1px solid rgba(167,139,250,0.3)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,color:"#a78bfa",flexShrink:0,marginTop:1 }}>{i+1}</span>
+                    <span style={{ fontSize:12,color:"#cbd5e1",lineHeight:1.6 }}>{a}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // ── AlertRow ──────────────────────────────────────────────────────────────────
+    function AlertRow({ alert, onClick, selected }) {
+      const s=SEV[alert.severity];
+      return (
+        <button onClick={()=>onClick(alert)} style={{ width:"100%",textAlign:"left",padding:"10px 12px",borderRadius:6,border:`1px solid ${selected?s.border:"rgba(255,255,255,0.06)"}`,background:selected?s.bg:"rgba(255,255,255,0.01)",marginBottom:6,cursor:"pointer",transition:"all 0.15s" }}>
+          <div style={{ display:"flex",justifyContent:"space-between",marginBottom:4 }}>
+            <div style={{ display:"flex",alignItems:"center",gap:8 }}>
+              <span style={{ width:6,height:6,borderRadius:"50%",background:s.dot,display:"inline-block" }}/>
+              <span style={{ fontSize:11,fontFamily:"IBM Plex Mono",fontWeight:700,color:s.text }}>{alert.severity}</span>
+              <span style={{ fontSize:11,fontFamily:"IBM Plex Mono",color:"#475569" }}>{alert.id}</span>
+            </div>
+            <span style={{ fontSize:11,color:"#475569" }}>{alert.time}</span>
+          </div>
+          <div style={{ fontSize:13,color:"#e2e8f0",fontWeight:500,lineHeight:1.3 }}>{alert.title}</div>
+          <div style={{ fontSize:11,color:"#64748b",marginTop:4 }}>{alert.asset} · {alert.source}</div>
+        </button>
+      );
+    }
+
+    // ── AlertDetail ───────────────────────────────────────────────────────────────
+    function AlertDetail({ alert }) {
+      if(!alert) return (
+        <div style={{ display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",height:"100%",color:"#334155",gap:8 }}>
+          <svg width="32" height="32" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeWidth="1.5" d="M9 12h6m-3-3v6M12 3l1.5 2.5H18l-2 3 2 3h-4.5L12 14l-1.5-2.5H6l2-3-2-3h4.5L12 3z"/></svg>
+          <span style={{ fontSize:12 }}>Select an alert to inspect</span>
+        </div>
+      );
+      const s=SEV[alert.severity];
+      const sc=alert.status==="Open"?"#f87171":alert.status==="Investigating"?"#fbbf24":"#4ade80";
+      return (
+        <div style={{ display:"flex",flexDirection:"column",gap:12 }}>
+          <div style={{ borderRadius:8,border:`1px solid ${s.border}`,background:s.bg,padding:12 }}>
+            <div style={{ display:"flex",alignItems:"center",gap:8,marginBottom:4 }}>
+              <span style={{ fontSize:11,fontFamily:"IBM Plex Mono",fontWeight:700,color:s.text,textTransform:"uppercase" }}>{alert.severity}</span>
+              <span style={{ fontSize:11,color:"#64748b",fontFamily:"IBM Plex Mono" }}>{alert.id}</span>
+              <span style={{ marginLeft:"auto",fontSize:11,fontFamily:"IBM Plex Mono",padding:"2px 8px",borderRadius:4,color:sc,background:`${sc}18`,border:`1px solid ${sc}40` }}>{alert.status}</span>
+            </div>
+            <div style={{ fontSize:14,fontWeight:600,color:"#f1f5f9" }}>{alert.title}</div>
+          </div>
+          <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:8 }}>
+            {[["Asset",alert.asset],["Source",alert.source],["IP / Host",alert.ip],["Tactic",alert.tactic]].map(([k,v])=>(
+              <div key={k} style={{ background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.05)",borderRadius:6,padding:8 }}>
+                <div style={{ fontSize:11,color:"#475569",marginBottom:2 }}>{k}</div>
+                <div style={{ fontSize:12,color:"#e2e8f0",fontFamily:"IBM Plex Mono" }}>{v}</div>
+              </div>
+            ))}
+          </div>
+          <div style={{ background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.05)",borderRadius:6,padding:10 }}>
+            <div style={{ fontSize:11,color:"#475569",marginBottom:4 }}>Description</div>
+            <div style={{ fontSize:12,color:"#94a3b8",lineHeight:1.7 }}>{alert.description}</div>
+          </div>
+          <AIAnalyst alert={alert}/>
+        </div>
+      );
+    }
+
+    // ── IOCLookup ─────────────────────────────────────────────────────────────────
+    function IOCLookup() {
+      const [q,setQ]=useState(""), [r,setR]=useState(null), [loading,setLoading]=useState(false), [searched,setSearched]=useState(false);
+      const go=()=>{ if(!q.trim())return; setLoading(true);setSearched(true); setTimeout(()=>{setR(MOCK_IOC[q.trim()]||null);setLoading(false);},800); };
+      return (
+        <div style={{ display:"flex",flexDirection:"column",gap:12 }}>
+          <div style={{ fontSize:11,color:"#64748b",textTransform:"uppercase",letterSpacing:"0.1em" }}>IOC Lookup</div>
+          <div style={{ display:"flex",gap:8 }}>
+            <input value={q} onChange={e=>setQ(e.target.value)} onKeyDown={e=>e.key==="Enter"&&go()} placeholder="IP, hash, domain..."
+              style={{ flex:1,background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:6,padding:"8px 12px",fontSize:13,color:"#e2e8f0",fontFamily:"IBM Plex Mono",outline:"none" }}/>
+            <button onClick={go} style={{ padding:"8px 16px",background:"rgba(6,182,212,0.12)",border:"1px solid rgba(6,182,212,0.3)",borderRadius:6,color:"#22d3ee",fontSize:11,fontFamily:"IBM Plex Mono",cursor:"pointer" }}>SCAN</button>
+          </div>
+          <div style={{ fontSize:11,color:"#334155" }}>Try: 185.220.101.45 · 45.33.32.156 · 8.8.8.8</div>
+          {loading && <div className="animate-pulse" style={{ fontSize:12,color:"#64748b" }}>Querying threat intel feeds...</div>}
+          {!loading&&searched&&r&&(
+            <div style={{ borderRadius:8,border:`1px solid ${r.safe?"#22c55e40":"#ef444440"}`,background:r.safe?"rgba(34,197,94,0.05)":"rgba(239,68,68,0.05)",padding:12 }}>
+              <div style={{ display:"flex",justifyContent:"space-between",marginBottom:8 }}>
+                <span style={{ fontSize:14,fontFamily:"IBM Plex Mono",fontWeight:700,color:r.safe?"#4ade80":"#f87171" }}>{r.safe?"CLEAN":"MALICIOUS"}</span>
+                <span style={{ fontSize:11,fontFamily:"IBM Plex Mono",padding:"2px 8px",borderRadius:4,background:r.score>50?"rgba(239,68,68,0.15)":"rgba(34,197,94,0.15)",color:r.score>50?"#f87171":"#4ade80" }}>Score: {r.score}/100</span>
+              </div>
+              <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:6,fontSize:12,marginBottom:8 }}>
+                {[["Vendor",r.vendor],["Country",r.country],["Reports",r.reports]].map(([k,v])=>(
+                  <div key={k}><span style={{ color:"#475569" }}>{k}: </span><span style={{ color:"#cbd5e1",fontFamily:"IBM Plex Mono" }}>{v}</span></div>
+                ))}
+              </div>
+              <div style={{ display:"flex",gap:6,flexWrap:"wrap" }}>
+                {r.tags.map(t=><span key={t} style={{ fontSize:11,padding:"2px 8px",borderRadius:20,border:"1px solid rgba(255,255,255,0.1)",color:"#94a3b8",fontFamily:"IBM Plex Mono" }}>{t}</span>)}
+              </div>
+            </div>
+          )}
+          {!loading&&searched&&!r&&(
+            <div style={{ borderRadius:8,border:"1px solid rgba(234,179,8,0.2)",background:"rgba(234,179,8,0.05)",padding:12 }}>
+              <div style={{ color:"#fbbf24",fontSize:13,fontFamily:"IBM Plex Mono",marginBottom:4 }}>UNKNOWN</div>
+              <div style={{ color:"#64748b",fontSize:12 }}>No intel found. Connect AbuseIPDB API key for live lookup.</div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // ── CISAFeed ──────────────────────────────────────────────────────────────────
+    function CISAFeed({ vulns, loaded }) {
+      if(!loaded) return <div className="animate-pulse" style={{ fontSize:12,color:"#475569",padding:"20px 0",textAlign:"center" }}>Loading CISA KEV feed...</div>;
+      return <div>{vulns.map((v,i)=>(
+        <div key={i} style={{ display:"flex",alignItems:"flex-start",gap:12,padding:"7px 8px",borderRadius:4,marginBottom:2 }}>
+          <span style={{ fontSize:11,fontFamily:"IBM Plex Mono",color:"#f87171",flexShrink:0,width:112 }}>{v.cveID}</span>
+          <div style={{ flex:1,minWidth:0 }}>
+            <div style={{ fontSize:12,color:"#cbd5e1",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap" }}>{v.vendorProject} — {v.product}</div>
+            <div style={{ fontSize:11,color:"#475569",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap" }}>{v.vulnerabilityName}</div>
+          </div>
+          <span style={{ fontSize:11,color:"#334155",fontFamily:"IBM Plex Mono",flexShrink:0 }}>{v.dateAdded}</span>
+        </div>
+      ))}</div>;
+    }
+
+    // ── App ────────────────────────────────────────────────────────────────────────
+    function App() {
+      const [sel,   setSel]   = useState(null);
+      const [kevs,  setKevs]  = useState([]);
+      const [loaded,setLoaded]= useState(false);
+      const [tab,   setTab]   = useState("alerts");
+      const [time,  setTime]  = useState(new Date());
+
+      useEffect(()=>{ const t=setInterval(()=>setTime(new Date()),1000); return()=>clearInterval(t); },[]);
+      useEffect(()=>{
+        fetch(CISA_URL).then(r=>r.json()).then(d=>{
+          setKevs([...d.vulnerabilities].sort((a,b)=>new Date(b.dateAdded)-new Date(a.dateAdded)).slice(0,25));
+          setLoaded(true);
+        }).catch(()=>setLoaded(true));
+      },[]);
+
+      const critical=ALERTS.filter(a=>a.severity==="CRITICAL").length;
+      const high=ALERTS.filter(a=>a.severity==="HIGH").length;
+      const open=ALERTS.filter(a=>a.status==="Open").length;
+
+      return (
+        <div style={{ minHeight:"100vh",background:"#080c10",color:"#e2e8f0",fontFamily:"IBM Plex Mono,monospace",display:"flex",flexDirection:"column",backgroundImage:"radial-gradient(ellipse at 20% 20%,rgba(0,212,255,0.03) 0%,transparent 60%)" }}>
+
+          <header style={{ borderBottom:"1px solid rgba(255,255,255,0.05)",padding:"10px 24px",display:"flex",alignItems:"center",justifyContent:"space-between",background:"rgba(0,0,0,0.3)",position:"sticky",top:0,zIndex:50 }}>
+            <div style={{ display:"flex",alignItems:"center",gap:16 }}>
+              <div style={{ display:"flex",alignItems:"center",gap:8 }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                  <path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.25C17.25 22.15 21 17.25 21 12V7L12 2z" fill="rgba(0,212,255,0.2)" stroke="#00D4FF" strokeWidth="1.5"/>
+                  <path d="M9 12l2 2 4-4" stroke="#00D4FF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                <span style={{ fontSize:14,fontWeight:700,letterSpacing:"0.1em",color:"#22d3ee" }}>SENTINEL<span style={{ color:"#fff" }}>IQ</span></span>
+              </div>
+              <span style={{ fontSize:11,color:"#334155" }}>/ Security Operations Platform v2.0</span>
+            </div>
+            <div style={{ display:"flex",alignItems:"center",gap:20 }}>
+              {FEEDS.map(f=>(
+                <div key={f.name} style={{ display:"flex",alignItems:"center",gap:6 }}>
+                  <Dot live={f.live}/><span style={{ fontSize:11,color:f.live?"#22d3ee":"#fbbf24" }}>{f.name}</span>
+                </div>
+              ))}
+              <div style={{ display:"flex",alignItems:"center",gap:6 }}>
+                <Dot live={true}/><span style={{ fontSize:11,color:"#4ade80" }}>AI Analyst</span>
+              </div>
+              <span style={{ fontSize:11,color:"#334155" }}>{time.toUTCString().slice(0,-4)} UTC</span>
+              <div style={{ width:28,height:28,borderRadius:"50%",background:"rgba(6,182,212,0.15)",border:"1px solid rgba(6,182,212,0.3)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,color:"#22d3ee" }}>M</div>
+            </div>
+          </header>
+
+          <div style={{ padding:"16px 24px",display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,borderBottom:"1px solid rgba(255,255,255,0.05)" }}>
+            {[["Total Alerts",ALERTS.length,"#f1f5f9","Last 24h"],["Critical",critical,"#f87171","Immediate action"],["High",high,"#fb923c","Needs review"],["Open",open,"#22d3ee","Unresolved"]].map(([l,v,c,s])=>(
+              <div key={l} style={{ background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.05)",borderRadius:8,padding:"12px 16px" }}>
+                <div style={{ fontSize:24,fontWeight:700,color:c,marginBottom:4 }}>{v}</div>
+                <div style={{ fontSize:11,color:"#94a3b8",textTransform:"uppercase",letterSpacing:"0.1em" }}>{l}</div>
+                <div style={{ fontSize:11,color:"#334155",marginTop:2 }}>{s}</div>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ flex:1,display:"grid",gridTemplateColumns:"280px 1fr 300px",overflow:"hidden" }}>
+
+            <div style={{ borderRight:"1px solid rgba(255,255,255,0.05)",display:"flex",flexDirection:"column",overflow:"hidden" }}>
+              <div style={{ padding:"10px 16px",borderBottom:"1px solid rgba(255,255,255,0.05)",display:"flex",justifyContent:"space-between",alignItems:"center" }}>
+                <span style={{ fontSize:11,color:"#64748b",textTransform:"uppercase",letterSpacing:"0.1em" }}>Alert Queue</span>
+                <div style={{ display:"flex",alignItems:"center",gap:6 }}><Dot live={true}/><span style={{ fontSize:11,color:"#f87171" }}>{open} Open</span></div>
+              </div>
+              <div style={{ flex:1,overflowY:"auto",padding:12 }}>
+                {ALERTS.map(a=><AlertRow key={a.id} alert={a} onClick={setSel} selected={sel?.id===a.id}/>)}
+              </div>
+            </div>
+
+            <div style={{ display:"flex",flexDirection:"column",overflow:"hidden" }}>
+              <div style={{ borderBottom:"1px solid rgba(255,255,255,0.05)",display:"flex" }}>
+                {[{key:"alerts",label:"Alert Detail + AI Analysis"},{key:"cisa",label:`CISA KEV ${loaded?`(${kevs.length})`:"..."}`}].map(t=>(
+                  <button key={t.key} onClick={()=>setTab(t.key)} style={{ padding:"12px 20px",fontSize:11,textTransform:"uppercase",letterSpacing:"0.1em",background:"none",border:"none",cursor:"pointer",fontFamily:"IBM Plex Mono",borderBottom:tab===t.key?"2px solid #06b6d4":"2px solid transparent",color:tab===t.key?"#22d3ee":"#475569" }}>{t.label}</button>
+                ))}
+              </div>
+              <div style={{ flex:1,overflowY:"auto",padding:16 }}>
+                {tab==="alerts" && <AlertDetail alert={sel}/>}
+                {tab==="cisa"   && <div><div style={{ display:"flex",alignItems:"center",gap:8,marginBottom:12 }}><Dot live={true}/><span style={{ fontSize:11,color:"#64748b" }}>Live CISA Known Exploited Vulnerabilities feed</span></div><CISAFeed vulns={kevs} loaded={loaded}/></div>}
+              </div>
+            </div>
+
+            <div style={{ borderLeft:"1px solid rgba(255,255,255,0.05)",display:"flex",flexDirection:"column",overflow:"hidden" }}>
+              <div style={{ padding:"10px 16px",borderBottom:"1px solid rgba(255,255,255,0.05)" }}>
+                <span style={{ fontSize:11,color:"#64748b",textTransform:"uppercase",letterSpacing:"0.1em" }}>Threat Intel</span>
+              </div>
+              <div style={{ flex:1,overflowY:"auto",padding:16 }}>
+                <IOCLookup/>
+                <div style={{ marginTop:24 }}>
+                  <div style={{ fontSize:11,color:"#64748b",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:12 }}>MITRE ATT&CK Activity</div>
+                  {MITRE.map(({tactic,count,color})=>(
+                    <div key={tactic} style={{ marginBottom:10 }}>
+                      <div style={{ display:"flex",justifyContent:"space-between",fontSize:12,marginBottom:4 }}>
+                        <span style={{ color:"#94a3b8" }}>{tactic}</span><span style={{ color:"#475569",fontFamily:"IBM Plex Mono" }}>{count}</span>
+                      </div>
+                      <div style={{ height:4,background:"rgba(255,255,255,0.05)",borderRadius:2,overflow:"hidden" }}>
+                        <div style={{ height:"100%",background:color,borderRadius:2,width:`${(count/3)*100}%` }}/>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div style={{ marginTop:24,border:"1px solid rgba(255,255,255,0.05)",borderRadius:8,padding:12,background:"rgba(255,255,255,0.01)" }}>
+                  <div style={{ fontSize:11,color:"#64748b",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:12 }}>Platform Roadmap</div>
+                  {[["Phase 1","Threat Dashboard","LIVE","#22d3ee","rgba(6,182,212,0.1)"],["Phase 2","AI Analyst Agent","LIVE","#4ade80","rgba(34,197,94,0.1)"],["Phase 3","GRC Tracker","NEXT","#fbbf24","rgba(234,179,8,0.1)"],["Phase 4","Incident Mgmt","SOON","#475569","rgba(255,255,255,0.03)"]].map(([p,n,s,c,b])=>(
+                    <div key={p} style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8 }}>
+                      <div style={{ fontSize:12 }}><span style={{ color:"#475569",fontFamily:"IBM Plex Mono" }}>{p} </span><span style={{ color:"#94a3b8" }}>{n}</span></div>
+                      <span style={{ fontSize:11,fontFamily:"IBM Plex Mono",padding:"2px 8px",borderRadius:4,color:c,background:b,border:`1px solid ${c}40` }}>{s}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+  </script>
+</body>
+</html>
