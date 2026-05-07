@@ -3,7 +3,16 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SentinelIQ — Security Operations Platform</title>
+  <title>SentinelIQ — AI-Powered Security Operations Platform</title>
+  <meta name="description" content="SentinelIQ is an AI-powered SOC platform built by Mohamed Mohamud. Features live CISA KEV feed, agentic AI alert triage, IOC lookup, and MITRE ATT&CK mapping." />
+  <meta property="og:title" content="SentinelIQ — AI-Powered Security Operations Platform" />
+  <meta property="og:description" content="A portfolio project simulating a Tier-1 SOC dashboard with live threat intelligence, AI analyst agent, and MITRE ATT&CK mapping." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://mmohamud25.github.io/Soc-SentinelIQ/" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="SentinelIQ — AI-Powered SOC Platform" />
+  <meta name="twitter:description" content="Portfolio project by Mohamed Mohamud. Live threat intel, AI analyst, MITRE ATT&CK mapping." />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12 2L3 7v5c0 5.25 3.75 10.15 9 11.25C17.25 22.15 21 17.25 21 12V7L12 2z' fill='%2300D4FF' opacity='0.9'/><path d='M9 12l2 2 4-4' stroke='white' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' fill='none'/></svg>" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
@@ -23,6 +32,9 @@
     .animate-pulse { animation: pulse  2s   cubic-bezier(.4,0,.6,1) infinite; }
     .fade-in       { animation: fadeIn 0.3s ease forwards; }
     .spin          { animation: spin   1s   linear infinite; }
+    .tooltip { position:relative; }
+    .tooltip:hover .tip { display:block; }
+    .tip { display:none; position:absolute; bottom:calc(100% + 6px); left:50%; transform:translateX(-50%); background:#1e293b; border:1px solid rgba(255,255,255,0.1); color:#94a3b8; font-size:11px; padding:4px 8px; border-radius:4px; white-space:nowrap; z-index:100; font-family:'IBM Plex Mono',monospace; }
   </style>
 </head>
 <body>
@@ -30,9 +42,8 @@
   <script type="text/babel">
     const { useState, useEffect, useRef } = React;
 
-    // ── Config ─────────────────────────────────────────────────────────────────
     const SUPABASE_URL  = "https://xkadqvmqxdyqoddiypet.supabase.co/functions/v1/ai-analyst";
-    const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhrYWRxdm1xeGR5cW9kZGl5cGV0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMzNzI5NDMsImV4cCI6MjA4ODk0ODk0M30.FPBEXOx62vaTcLom7IkVRKRLda1xKk09slhQZ9yuRWc"; // Project Settings → API → anon public
+    const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhrYWRxdm1xeGR5cW9kZGl5cGV0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMzNzI5NDMsImV4cCI6MjA4ODk0ODk0M30.FPBEXOx62vaTcLom7IkVRKRLda1xKk09slhQZ9yuRWc";
 
     const SEV = {
       CRITICAL: { bg:"#ef444420", border:"#ef444460", text:"#f87171", dot:"#ef4444" },
@@ -48,18 +59,40 @@
       "45.33.32.156":   { safe:false, score:74, vendor:"Linode LLC",    country:"US", reports:89,  tags:["Scanner","Brute Force"] },
     };
 
+    // Timestamps stored as ms offsets from page load — counts up dynamically
+    const PAGE_LOAD = Date.now();
     const ALERTS = [
-      { id:"ALT-001", severity:"CRITICAL", title:"Ransomware C2 Beacon Detected",      source:"EDR",      asset:"WS-FINANCE-04", ip:"185.220.101.45", time:"2m ago",  status:"Open",         tactic:"Command & Control", description:"Endpoint WS-FINANCE-04 established outbound connection to known Tor exit node on port 4444. Process tree: svchost.exe spawned cmd.exe. SHA256: d41d8cd98f00b204e9800998ecf8427e. Destination IP flagged in 312 abuse reports." },
-      { id:"ALT-002", severity:"HIGH",     title:"Lateral Movement via Pass-the-Hash", source:"SIEM",     asset:"DC-PROD-01",    ip:"10.0.1.45",      time:"8m ago",  status:"Investigating", tactic:"Lateral Movement",  description:"Multiple failed SMB auth attempts followed by successful NTLM auth from WS-HR-11 to DC-PROD-01. Admin credentials may be compromised. Event IDs 4624 and 4648 detected in sequence within 90 seconds." },
-      { id:"ALT-003", severity:"HIGH",     title:"Suspicious PowerShell Execution",    source:"EDR",      asset:"WS-HR-11",      ip:"10.0.1.22",      time:"15m ago", status:"Open",         tactic:"Execution",         description:"Base64-encoded PowerShell executed via Word macro. Downloads payload from external IP. Parent: WINWORD.EXE. Command: powershell -enc JABjAGwAaQBlAG4AdA... Likely phishing document vector." },
-      { id:"ALT-004", severity:"MEDIUM",   title:"Failed Login Spike (42 attempts)",   source:"SIEM",     asset:"VPN-GW-01",     ip:"45.33.32.156",   time:"22m ago", status:"Open",         tactic:"Credential Access", description:"42 failed SSH attempts from 45.33.32.156 in 3 minutes targeting VPN gateway. Username list: admin, root, user, administrator. IP flagged as scanner with 89 prior abuse reports." },
-      { id:"ALT-005", severity:"MEDIUM",   title:"Outbound Traffic to Known Bad IP",   source:"Firewall", asset:"WS-DEVOPS-02",  ip:"185.220.101.45", time:"31m ago", status:"Investigating", tactic:"Exfiltration",      description:"WS-DEVOPS-02 sent 2.3GB to flagged IP over 45 minutes via HTTPS port 443. Transfer began 02:14 UTC outside business hours. Destination associated with prior exfiltration campaigns." },
-      { id:"ALT-006", severity:"LOW",      title:"SSL Certificate Expiry Warning",     source:"Monitor",  asset:"api.internal",  ip:"10.0.0.5",       time:"1h ago",  status:"Open",         tactic:"N/A",               description:"SSL cert for api.internal expires in 7 days. Auto-renewal failed due to DNS mismatch between Let's Encrypt and internal resolver. Manual intervention required." },
+      { id:"ALT-001", severity:"CRITICAL", offsetMs:2*60*1000,    title:"Ransomware C2 Beacon Detected",      source:"EDR",      asset:"WS-FINANCE-04", ip:"185.220.101.45", status:"Open",         tactic:"Command & Control", description:"Endpoint WS-FINANCE-04 established outbound connection to known Tor exit node on port 4444. Process tree: svchost.exe spawned cmd.exe. SHA256: d41d8cd98f00b204e9800998ecf8427e. Destination IP flagged in 312 abuse reports." },
+      { id:"ALT-002", severity:"HIGH",     offsetMs:8*60*1000,    title:"Lateral Movement via Pass-the-Hash", source:"SIEM",     asset:"DC-PROD-01",    ip:"10.0.1.45",      status:"Investigating", tactic:"Lateral Movement",  description:"Multiple failed SMB auth attempts followed by successful NTLM auth from WS-HR-11 to DC-PROD-01. Admin credentials may be compromised. Event IDs 4624 and 4648 detected in sequence within 90 seconds." },
+      { id:"ALT-003", severity:"HIGH",     offsetMs:15*60*1000,   title:"Suspicious PowerShell Execution",    source:"EDR",      asset:"WS-HR-11",      ip:"10.0.1.22",      status:"Open",         tactic:"Execution",         description:"Base64-encoded PowerShell executed via Word macro. Downloads payload from external IP. Parent: WINWORD.EXE. Command: powershell -enc JABjAGwAaQBlAG4AdA... Likely phishing document vector." },
+      { id:"ALT-004", severity:"MEDIUM",   offsetMs:22*60*1000,   title:"Failed Login Spike (42 attempts)",   source:"SIEM",     asset:"VPN-GW-01",     ip:"45.33.32.156",   status:"Open",         tactic:"Credential Access", description:"42 failed SSH attempts from 45.33.32.156 in 3 minutes targeting VPN gateway. Username list: admin, root, user, administrator. IP flagged as scanner with 89 prior abuse reports." },
+      { id:"ALT-005", severity:"MEDIUM",   offsetMs:31*60*1000,   title:"Outbound Traffic to Known Bad IP",   source:"Firewall", asset:"WS-DEVOPS-02",  ip:"185.220.101.45", status:"Investigating", tactic:"Exfiltration",      description:"WS-DEVOPS-02 sent 2.3GB to flagged IP over 45 minutes via HTTPS port 443. Transfer began 02:14 UTC outside business hours. Destination associated with prior exfiltration campaigns." },
+      { id:"ALT-006", severity:"LOW",      offsetMs:60*60*1000,   title:"SSL Certificate Expiry Warning",     source:"Monitor",  asset:"api.internal",  ip:"10.0.0.5",       status:"Open",         tactic:"N/A",               description:"SSL cert for api.internal expires in 7 days. Auto-renewal failed due to DNS mismatch between Let's Encrypt and internal resolver. Manual intervention required." },
     ];
 
-    const FEEDS  = [{ name:"CISA KEV",live:true },{ name:"AlienVault OTX",live:true },{ name:"AbuseIPDB",live:true },{ name:"VirusTotal",live:false }];
-    const MITRE  = [{ tactic:"Command & Control",count:3,color:"#ef4444" },{ tactic:"Credential Access",count:2,color:"#f97316" },{ tactic:"Lateral Movement",count:1,color:"#eab308" },{ tactic:"Execution",count:1,color:"#fb923c" },{ tactic:"Exfiltration",count:1,color:"#a855f7" }];
-    const VCOLOR = { TRUE_POSITIVE:{c:"#f87171",bg:"rgba(239,68,68,0.12)",b:"rgba(239,68,68,0.3)"}, FALSE_POSITIVE:{c:"#4ade80",bg:"rgba(34,197,94,0.12)",b:"rgba(34,197,94,0.3)"}, BENIGN:{c:"#fbbf24",bg:"rgba(234,179,8,0.12)",b:"rgba(234,179,8,0.3)"} };
+    const FEEDS  = [
+      { name:"CISA KEV",       live:true,  tip:"Live — fetched via Supabase proxy" },
+      { name:"AlienVault OTX", live:true,  tip:"Live — IOC enrichment active" },
+      { name:"AbuseIPDB",      live:true,  tip:"Live — IP reputation active" },
+      { name:"VirusTotal",     live:false, tip:"Degraded — API key not configured" },
+    ];
+
+    const MITRE = [
+      { tactic:"Command & Control", count:3, color:"#ef4444" },
+      { tactic:"Credential Access",  count:2, color:"#f97316" },
+      { tactic:"Lateral Movement",   count:1, color:"#eab308" },
+      { tactic:"Execution",          count:1, color:"#fb923c" },
+      { tactic:"Exfiltration",       count:1, color:"#a855f7" },
+    ];
+    const MITRE_MAX = Math.max(...MITRE.map(m => m.count));
+
+    const VCOLOR = {
+      TRUE_POSITIVE:  { c:"#f87171", bg:"rgba(239,68,68,0.12)",  b:"rgba(239,68,68,0.3)"  },
+      FALSE_POSITIVE: { c:"#4ade80", bg:"rgba(34,197,94,0.12)",  b:"rgba(34,197,94,0.3)"  },
+      BENIGN:         { c:"#fbbf24", bg:"rgba(234,179,8,0.12)",  b:"rgba(234,179,8,0.3)"  },
+    };
+
+    const STATUS_COLOR = { Open:"#f87171", Investigating:"#fbbf24", Closed:"#4ade80" };
 
     const sbHeaders = () => ({
       "Content-Type": "application/json",
@@ -67,18 +100,67 @@
       "apikey": SUPABASE_ANON,
     });
 
+    // Dynamic timestamp from offset
+    function timeAgo(offsetMs) {
+      const elapsed = Date.now() - PAGE_LOAD + offsetMs;
+      const m = Math.floor(elapsed / 60000);
+      if (m < 60) return `${m}m ago`;
+      const h = Math.floor(m / 60);
+      if (h < 24) return `${h}h ago`;
+      return `${Math.floor(h/24)}d ago`;
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────────────
-    function Dot({ live }) {
+    function Dot({ live, tip }) {
       return (
-        <span style={{ position:"relative",display:"inline-flex",width:10,height:10 }}>
+        <span className="tooltip" style={{ position:"relative",display:"inline-flex",width:10,height:10,cursor:"default" }}>
           <span className="animate-ping" style={{ position:"absolute",inset:0,borderRadius:"50%",background:live?"#22c55e":"#eab308",opacity:0.5 }}/>
           <span style={{ position:"relative",width:8,height:8,borderRadius:"50%",margin:1,background:live?"#22c55e":"#eab308" }}/>
+          {tip && <span className="tip">{tip}</span>}
         </span>
       );
     }
 
     function Spinner() {
       return <svg className="spin" width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="rgba(167,139,250,0.2)" strokeWidth="3"/><path d="M12 2a10 10 0 0110 10" stroke="#a78bfa" strokeWidth="3" strokeLinecap="round"/></svg>;
+    }
+
+    // ── About Modal ───────────────────────────────────────────────────────────
+    function AboutModal({ onClose }) {
+      return (
+        <div onClick={onClose} style={{ position:"fixed",inset:0,background:"rgba(0,0,0,0.7)",zIndex:200,display:"flex",alignItems:"center",justifyContent:"center",padding:24 }}>
+          <div onClick={e=>e.stopPropagation()} style={{ background:"#0f1623",border:"1px solid rgba(255,255,255,0.1)",borderRadius:12,padding:28,maxWidth:500,width:"100%" }}>
+            <div style={{ display:"flex",alignItems:"center",gap:10,marginBottom:16 }}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.25C17.25 22.15 21 17.25 21 12V7L12 2z" fill="rgba(0,212,255,0.2)" stroke="#00D4FF" strokeWidth="1.5"/><path d="M9 12l2 2 4-4" stroke="#00D4FF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              <span style={{ fontSize:16,fontWeight:700,color:"#22d3ee",letterSpacing:"0.1em" }}>SENTINEL<span style={{ color:"#fff" }}>IQ</span></span>
+            </div>
+            <p style={{ fontSize:13,color:"#94a3b8",lineHeight:1.7,marginBottom:14 }}>
+              SentinelIQ is a portfolio project simulating a Tier-1 Security Operations Center (SOC) dashboard. It demonstrates real-world cybersecurity tooling, threat intelligence aggregation, and AI-assisted alert triage.
+            </p>
+            <div style={{ marginBottom:14 }}>
+              <div style={{ fontSize:11,color:"#475569",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:8 }}>Tech Stack</div>
+              {[["Frontend","React (in-browser), Tailwind CSS, IBM Plex Mono"],["Backend","Supabase Edge Functions (Deno)"],["AI","Claude API (Anthropic) via secure proxy"],["Threat Intel","CISA KEV, AbuseIPDB, AlienVault OTX"],["Hosting","GitHub Pages"]].map(([k,v])=>(
+                <div key={k} style={{ display:"flex",gap:8,marginBottom:6,fontSize:12 }}>
+                  <span style={{ color:"#475569",width:80,flexShrink:0 }}>{k}</span>
+                  <span style={{ color:"#cbd5e1",fontFamily:"IBM Plex Mono" }}>{v}</span>
+                </div>
+              ))}
+            </div>
+            <div style={{ marginBottom:20 }}>
+              <div style={{ fontSize:11,color:"#475569",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:8 }}>Concepts Demonstrated</div>
+              <div style={{ display:"flex",gap:6,flexWrap:"wrap" }}>
+                {["AI Alert Triage","MITRE ATT&CK","IOC Enrichment","CORS Proxying","Secure API Design","Threat Intelligence","Incident Response","CISA KEV Integration"].map(t=>(
+                  <span key={t} style={{ fontSize:11,padding:"3px 8px",borderRadius:20,border:"1px solid rgba(6,182,212,0.3)",color:"#22d3ee",background:"rgba(6,182,212,0.08)" }}>{t}</span>
+                ))}
+              </div>
+            </div>
+            <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center" }}>
+              <span style={{ fontSize:12,color:"#475569" }}>Built by <a href="https://mmohamud.me" target="_blank" style={{ color:"#22d3ee",textDecoration:"none" }}>Mohamed Mohamud</a></span>
+              <button onClick={onClose} style={{ padding:"6px 16px",background:"rgba(6,182,212,0.12)",border:"1px solid rgba(6,182,212,0.3)",borderRadius:6,color:"#22d3ee",fontSize:12,fontFamily:"IBM Plex Mono",cursor:"pointer" }}>Close</button>
+            </div>
+          </div>
+        </div>
+      );
     }
 
     // ── AI Analyst ────────────────────────────────────────────────────────────
@@ -93,18 +175,14 @@
         setStatus("loading"); setParsed(null); setErrMsg("");
         try {
           const res = await fetch(SUPABASE_URL, {
-            method: "POST",
-            headers: sbHeaders(),
-            body: JSON.stringify({ alert }),
+            method:"POST", headers:sbHeaders(),
+            body:JSON.stringify({ alert }),
           });
           const data = await res.json();
           if (!res.ok || data.error) throw new Error(data.error || "Edge function error");
           setParsed(data.analysis);
           setStatus("done");
-        } catch (e) {
-          setErrMsg(e.message);
-          setStatus("error");
-        }
+        } catch(e) { setErrMsg(e.message); setStatus("error"); }
       };
 
       if (!alert) return null;
@@ -129,20 +207,16 @@
           </div>
 
           {status==="idle" && <div style={{ borderRadius:8,border:"1px solid rgba(167,139,250,0.15)",background:"rgba(167,139,250,0.04)",padding:12,fontSize:12,color:"#64748b" }}>Click <strong style={{ color:"#a78bfa" }}>Run AI Analysis</strong> to trigger an autonomous investigation on this alert.</div>}
-
           {status==="loading" && (
             <div style={{ borderRadius:8,border:"1px solid rgba(167,139,250,0.2)",background:"rgba(167,139,250,0.04)",padding:14,display:"flex",flexDirection:"column",gap:10 }}>
               {["Routing alert to AI analyst...","Enriching IOC context...","Mapping MITRE ATT&CK techniques...","Generating incident report..."].map((s,i)=>(
                 <div key={i} className="animate-pulse" style={{ display:"flex",alignItems:"center",gap:8,fontSize:12,color:"#64748b",animationDelay:`${i*0.3}s` }}>
-                  <span style={{ width:5,height:5,borderRadius:"50%",background:"#a78bfa",display:"inline-block",flexShrink:0 }}/>
-                  {s}
+                  <span style={{ width:5,height:5,borderRadius:"50%",background:"#a78bfa",display:"inline-block",flexShrink:0 }}/>{s}
                 </div>
               ))}
             </div>
           )}
-
-          {status==="error" && <div style={{ borderRadius:8,border:"1px solid rgba(239,68,68,0.3)",background:"rgba(239,68,68,0.05)",padding:12,fontSize:12,color:"#f87171" }}><strong>Error:</strong> {errMsg}<div style={{ marginTop:6,fontSize:11,color:"#64748b" }}>Check Supabase → Edge Functions → Logs for details.</div></div>}
-
+          {status==="error" && <div style={{ borderRadius:8,border:"1px solid rgba(239,68,68,0.3)",background:"rgba(239,68,68,0.05)",padding:12,fontSize:12,color:"#f87171" }}><strong>Error:</strong> {errMsg}<div style={{ marginTop:6,fontSize:11,color:"#64748b" }}>Check Supabase Edge Functions logs for details.</div></div>}
           {status==="done" && parsed && (
             <div className="fade-in" style={{ display:"flex",flexDirection:"column",gap:10 }}>
               <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:8 }}>
@@ -191,18 +265,24 @@
       );
     }
 
-    // ── AlertRow ──────────────────────────────────────────────────────────────
-    function AlertRow({ alert, onClick, selected }) {
-      const s=SEV[alert.severity];
+    // ── AlertRow — now with status badge ─────────────────────────────────────
+    function AlertRow({ alert, onClick, selected, timeStr }) {
+      const s  = SEV[alert.severity];
+      const sc = STATUS_COLOR[alert.status] || "#64748b";
       return (
         <button onClick={()=>onClick(alert)} style={{ width:"100%",textAlign:"left",padding:"10px 12px",borderRadius:6,border:`1px solid ${selected?s.border:"rgba(255,255,255,0.06)"}`,background:selected?s.bg:"rgba(255,255,255,0.01)",marginBottom:6,cursor:"pointer",transition:"all 0.15s" }}>
           <div style={{ display:"flex",justifyContent:"space-between",marginBottom:4 }}>
-            <div style={{ display:"flex",alignItems:"center",gap:8 }}>
-              <span style={{ width:6,height:6,borderRadius:"50%",background:s.dot,display:"inline-block" }}/>
+            <div style={{ display:"flex",alignItems:"center",gap:6 }}>
+              <span style={{ width:6,height:6,borderRadius:"50%",background:s.dot,display:"inline-block",flexShrink:0 }}/>
               <span style={{ fontSize:11,fontFamily:"IBM Plex Mono",fontWeight:700,color:s.text }}>{alert.severity}</span>
-              <span style={{ fontSize:11,fontFamily:"IBM Plex Mono",color:"#475569" }}>{alert.id}</span>
+              <span style={{ fontSize:10,fontFamily:"IBM Plex Mono",color:"#475569" }}>{alert.id}</span>
             </div>
-            <span style={{ fontSize:11,color:"#475569" }}>{alert.time}</span>
+            <div style={{ display:"flex",alignItems:"center",gap:6 }}>
+              {alert.status !== "Open" &&
+                <span style={{ fontSize:10,fontFamily:"IBM Plex Mono",padding:"1px 6px",borderRadius:3,color:sc,background:`${sc}18`,border:`1px solid ${sc}30` }}>{alert.status}</span>
+              }
+              <span style={{ fontSize:11,color:"#475569" }}>{timeStr}</span>
+            </div>
           </div>
           <div style={{ fontSize:13,color:"#e2e8f0",fontWeight:500,lineHeight:1.3 }}>{alert.title}</div>
           <div style={{ fontSize:11,color:"#64748b",marginTop:4 }}>{alert.asset} · {alert.source}</div>
@@ -211,15 +291,15 @@
     }
 
     // ── AlertDetail ───────────────────────────────────────────────────────────
-    function AlertDetail({ alert }) {
+    function AlertDetail({ alert, timeStr }) {
       if(!alert) return (
         <div style={{ display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",height:"100%",color:"#334155",gap:8 }}>
           <svg width="32" height="32" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeWidth="1.5" d="M9 12h6m-3-3v6M12 3l1.5 2.5H18l-2 3 2 3h-4.5L12 14l-1.5-2.5H6l2-3-2-3h4.5L12 3z"/></svg>
           <span style={{ fontSize:12 }}>Select an alert to inspect</span>
         </div>
       );
-      const s=SEV[alert.severity];
-      const sc=alert.status==="Open"?"#f87171":alert.status==="Investigating"?"#fbbf24":"#4ade80";
+      const s  = SEV[alert.severity];
+      const sc = STATUS_COLOR[alert.status] || "#64748b";
       return (
         <div style={{ display:"flex",flexDirection:"column",gap:12 }}>
           <div style={{ borderRadius:8,border:`1px solid ${s.border}`,background:s.bg,padding:12 }}>
@@ -253,7 +333,10 @@
       const go=()=>{ if(!q.trim())return; setLoading(true);setSearched(true); setTimeout(()=>{setR(MOCK_IOC[q.trim()]||null);setLoading(false);},800); };
       return (
         <div style={{ display:"flex",flexDirection:"column",gap:12 }}>
-          <div style={{ fontSize:11,color:"#64748b",textTransform:"uppercase",letterSpacing:"0.1em" }}>IOC Lookup</div>
+          <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center" }}>
+            <div style={{ fontSize:11,color:"#64748b",textTransform:"uppercase",letterSpacing:"0.1em" }}>IOC Lookup</div>
+            <span style={{ fontSize:10,color:"#334155",fontFamily:"IBM Plex Mono",background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.06)",padding:"2px 6px",borderRadius:4 }}>Demo — 4 sample IPs</span>
+          </div>
           <div style={{ display:"flex",gap:8 }}>
             <input value={q} onChange={e=>setQ(e.target.value)} onKeyDown={e=>e.key==="Enter"&&go()} placeholder="IP, hash, domain..."
               style={{ flex:1,background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:6,padding:"8px 12px",fontSize:13,color:"#e2e8f0",fontFamily:"IBM Plex Mono",outline:"none" }}/>
@@ -280,7 +363,7 @@
           {!loading&&searched&&!r&&(
             <div style={{ borderRadius:8,border:"1px solid rgba(234,179,8,0.2)",background:"rgba(234,179,8,0.05)",padding:12 }}>
               <div style={{ color:"#fbbf24",fontSize:13,fontFamily:"IBM Plex Mono",marginBottom:4 }}>UNKNOWN</div>
-              <div style={{ color:"#64748b",fontSize:12 }}>No intel found.</div>
+              <div style={{ color:"#64748b",fontSize:12 }}>Not found in demo data. Try: 185.220.101.45</div>
             </div>
           )}
         </div>
@@ -305,33 +388,36 @@
 
     // ── App ───────────────────────────────────────────────────────────────────
     function App() {
-      const [sel,   setSel]   = useState(null);
-      const [kevs,  setKevs]  = useState([]);
-      const [loaded,setLoaded]= useState(false);
-      const [tab,   setTab]   = useState("alerts");
-      const [time,  setTime]  = useState(new Date());
+      // Auto-select first (Critical) alert on load
+      const [sel,      setSel]      = useState(ALERTS[0]);
+      const [kevs,     setKevs]     = useState([]);
+      const [loaded,   setLoaded]   = useState(false);
+      const [tab,      setTab]      = useState("alerts");
+      const [time,     setTime]     = useState(new Date());
+      const [tick,     setTick]     = useState(0);
+      const [showAbout,setShowAbout]= useState(false);
 
-      useEffect(()=>{ const t=setInterval(()=>setTime(new Date()),1000); return()=>clearInterval(t); },[]);
-
-      // Fetch CISA via Supabase proxy — no CORS issues
+      // Clock + timestamp tick every 30s
       useEffect(()=>{
-        fetch(`${SUPABASE_URL}?action=cisa`, { headers: sbHeaders() })
+        const t = setInterval(()=>{ setTime(new Date()); setTick(n=>n+1); }, 1000);
+        return()=>clearInterval(t);
+      },[]);
+
+      useEffect(()=>{
+        fetch(`${SUPABASE_URL}?action=cisa`, { headers:sbHeaders() })
           .then(r=>r.json())
-          .then(d=>{
-            if(d.vulnerabilities){
-              setKevs([...d.vulnerabilities].sort((a,b)=>new Date(b.dateAdded)-new Date(a.dateAdded)).slice(0,25));
-            }
-            setLoaded(true);
-          })
+          .then(d=>{ if(d.vulnerabilities){ setKevs([...d.vulnerabilities].sort((a,b)=>new Date(b.dateAdded)-new Date(a.dateAdded)).slice(0,25)); } setLoaded(true); })
           .catch(()=>setLoaded(true));
       },[]);
 
-      const critical=ALERTS.filter(a=>a.severity==="CRITICAL").length;
-      const high=ALERTS.filter(a=>a.severity==="HIGH").length;
-      const open=ALERTS.filter(a=>a.status==="Open").length;
+      const critical = ALERTS.filter(a=>a.severity==="CRITICAL").length;
+      const high     = ALERTS.filter(a=>a.severity==="HIGH").length;
+      const open     = ALERTS.filter(a=>a.status==="Open").length;
 
       return (
         <div style={{ minHeight:"100vh",background:"#080c10",color:"#e2e8f0",fontFamily:"IBM Plex Mono,monospace",display:"flex",flexDirection:"column",backgroundImage:"radial-gradient(ellipse at 20% 20%,rgba(0,212,255,0.03) 0%,transparent 60%)" }}>
+
+          {showAbout && <AboutModal onClose={()=>setShowAbout(false)}/>}
 
           <header style={{ borderBottom:"1px solid rgba(255,255,255,0.05)",padding:"10px 24px",display:"flex",alignItems:"center",justifyContent:"space-between",background:"rgba(0,0,0,0.3)",position:"sticky",top:0,zIndex:50 }}>
             <div style={{ display:"flex",alignItems:"center",gap:16 }}>
@@ -343,14 +429,15 @@
                 <span style={{ fontSize:14,fontWeight:700,letterSpacing:"0.1em",color:"#22d3ee" }}>SENTINEL<span style={{ color:"#fff" }}>IQ</span></span>
               </div>
               <span style={{ fontSize:11,color:"#334155" }}>/ Security Operations Platform v2.0</span>
+              <button onClick={()=>setShowAbout(true)} style={{ fontSize:11,color:"#475569",background:"none",border:"1px solid rgba(255,255,255,0.06)",borderRadius:4,padding:"2px 8px",cursor:"pointer",fontFamily:"IBM Plex Mono" }}>About</button>
             </div>
-            <div style={{ display:"flex",alignItems:"center",gap:20 }}>
+            <div style={{ display:"flex",alignItems:"center",gap:16 }}>
               {FEEDS.map(f=>(
                 <div key={f.name} style={{ display:"flex",alignItems:"center",gap:6 }}>
-                  <Dot live={f.live}/><span style={{ fontSize:11,color:f.live?"#22d3ee":"#fbbf24" }}>{f.name}</span>
+                  <Dot live={f.live} tip={f.tip}/><span style={{ fontSize:11,color:f.live?"#22d3ee":"#fbbf24" }}>{f.name}</span>
                 </div>
               ))}
-              <div style={{ display:"flex",alignItems:"center",gap:6 }}><Dot live={true}/><span style={{ fontSize:11,color:"#4ade80" }}>AI Analyst</span></div>
+              <div style={{ display:"flex",alignItems:"center",gap:6 }}><Dot live={true} tip="AI Analyst active via Supabase"/><span style={{ fontSize:11,color:"#4ade80" }}>AI Analyst</span></div>
               <span style={{ fontSize:11,color:"#334155" }}>{time.toUTCString().slice(0,-4)} UTC</span>
               <div style={{ width:28,height:28,borderRadius:"50%",background:"rgba(6,182,212,0.15)",border:"1px solid rgba(6,182,212,0.3)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,color:"#22d3ee" }}>M</div>
             </div>
@@ -374,7 +461,7 @@
                 <div style={{ display:"flex",alignItems:"center",gap:6 }}><Dot live={true}/><span style={{ fontSize:11,color:"#f87171" }}>{open} Open</span></div>
               </div>
               <div style={{ flex:1,overflowY:"auto",padding:12 }}>
-                {ALERTS.map(a=><AlertRow key={a.id} alert={a} onClick={setSel} selected={sel?.id===a.id}/>)}
+                {ALERTS.map(a=><AlertRow key={a.id} alert={a} onClick={setSel} selected={sel?.id===a.id} timeStr={timeAgo(a.offsetMs)}/>)}
               </div>
             </div>
 
@@ -385,7 +472,7 @@
                 ))}
               </div>
               <div style={{ flex:1,overflowY:"auto",padding:16 }}>
-                {tab==="alerts" && <AlertDetail alert={sel}/>}
+                {tab==="alerts" && <AlertDetail alert={sel} timeStr={sel?timeAgo(sel.offsetMs):""}/>}
                 {tab==="cisa"   && <div><div style={{ display:"flex",alignItems:"center",gap:8,marginBottom:12 }}><Dot live={true}/><span style={{ fontSize:11,color:"#64748b" }}>Live CISA Known Exploited Vulnerabilities — proxied via Supabase</span></div><CISAFeed vulns={kevs} loaded={loaded}/></div>}
               </div>
             </div>
@@ -404,7 +491,7 @@
                         <span style={{ color:"#94a3b8" }}>{tactic}</span><span style={{ color:"#475569",fontFamily:"IBM Plex Mono" }}>{count}</span>
                       </div>
                       <div style={{ height:4,background:"rgba(255,255,255,0.05)",borderRadius:2,overflow:"hidden" }}>
-                        <div style={{ height:"100%",background:color,borderRadius:2,width:`${(count/3)*100}%` }}/>
+                        <div style={{ height:"100%",background:color,borderRadius:2,width:`${(count/MITRE_MAX)*100}%` }}/>
                       </div>
                     </div>
                   ))}
@@ -417,6 +504,9 @@
                       <span style={{ fontSize:11,fontFamily:"IBM Plex Mono",padding:"2px 8px",borderRadius:4,color:c,background:b,border:`1px solid ${c}40` }}>{s}</span>
                     </div>
                   ))}
+                </div>
+                <div style={{ marginTop:16,padding:"10px 12px",borderRadius:8,border:"1px solid rgba(255,255,255,0.05)",background:"rgba(255,255,255,0.01)",fontSize:11,color:"#334155",lineHeight:1.6 }}>
+                  Portfolio project by <a href="https://mmohamud.me" target="_blank" style={{ color:"#22d3ee",textDecoration:"none" }}>Mohamed Mohamud</a>. Simulates a Tier-1 SOC dashboard. Stack: React, Supabase, Claude API.
                 </div>
               </div>
             </div>
