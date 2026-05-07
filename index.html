@@ -253,11 +253,13 @@
     // ── Left Sidebar ──────────────────────────────────────────────────────────
     function Sidebar({ active, onChange }) {
       const items = [
-        { id:"dashboard", tip:"Dashboard", icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M9 22V12h6v10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg> },
-        { id:"alerts",    tip:"Alerts",    icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg> },
-        { id:"incidents", tip:"Incidents",  icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M14 2v6h6M12 18v-6M9 15h6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg> },
-        { id:"grc",      tip:"GRC Tracker",icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.25C17.25 22.15 21 17.25 21 12V7L12 2z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M9 12l2 2 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg> },
-        { id:"settings",  tip:"Settings",  icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.5"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" stroke="currentColor" strokeWidth="1.5"/></svg> },
+        { id:"dashboard", tip:"Dashboard",   icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M9 22V12h6v10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg> },
+        { id:"alerts",    tip:"Alert Queue", icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg> },
+        { id:"incidents", tip:"Incidents",   icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M14 2v6h6M12 18v-6M9 15h6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg> },
+        { id:"grc",       tip:"GRC Tracker", icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.25C17.25 22.15 21 17.25 21 12V7L12 2z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M9 12l2 2 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg> },
+        { id:"hunt",      tip:"Threat Hunt", icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="1.5"/><path d="M21 21l-4.35-4.35" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg> },
+        { id:"reports",   tip:"Reports",     icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M9 17H7A5 5 0 017 7h2M15 7h2a5 5 0 010 10h-2M8 12h8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg> },
+        { id:"settings",  tip:"Settings",    icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.5"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" stroke="currentColor" strokeWidth="1.5"/></svg> },
       ];
       return (
         <div style={{ width:48,background:C.surface,borderRight:`1px solid ${C.border}`,display:"flex",flexDirection:"column",alignItems:"center",paddingTop:8,paddingBottom:8,gap:4,flexShrink:0 }}>
@@ -670,6 +672,534 @@
             </div>
 
           </div>
+        </div>
+      );
+    }
+
+    // ── Dashboard Overview ────────────────────────────────────────────────────
+    function DashboardOverview({ alerts, incidents, kevs, activity, setSideTab }) {
+      const critical  = alerts.filter(a=>a.severity==="CRITICAL"&&a.status!=="Closed").length;
+      const high      = alerts.filter(a=>a.severity==="HIGH"&&a.status!=="Closed").length;
+      const open      = alerts.filter(a=>a.status==="Open").length;
+      const openInc   = incidents.filter(i=>i.status!=="Closed").length;
+      const grcScore  = Math.round((CONTROLS_RAW.filter(c=>c.status==="Implemented").length/CONTROLS_RAW.length)*100);
+      const avgMTTD   = Math.round(incidents.reduce((s,i)=>s+(i.detectedMs/60000),0)/incidents.length);
+      const threat    = critical>0?"CRITICAL":high>=2?"HIGH":high===1?"MEDIUM":"LOW";
+      const tColor    = {CRITICAL:"#dc2626",HIGH:"#f97316",MEDIUM:"#fbbf24",LOW:"#4ade80"}[threat];
+
+      // 24h alert volume — simulated hourly distribution
+      const hours = Array.from({length:24},(_,i)=>{
+        const h = (new Date().getHours()-23+i+24)%24;
+        const base = [1,0,0,1,0,0,0,1,2,3,4,2,3,2,1,2,3,4,3,2,2,3,2,1][i];
+        return { h:`${h}:00`, v:base };
+      });
+      const maxV = Math.max(...hours.map(h=>h.v),1);
+
+      const MITRE_ACTIVE = ["Command & Control","Lateral Movement","Execution","Credential Access","Exfiltration"];
+
+      return (
+        <div style={{ flex:1,overflowY:"auto",padding:20,display:"flex",flexDirection:"column",gap:16 }}>
+
+          {/* Threat level + quick stats */}
+          <div style={{ display:"grid",gridTemplateColumns:"200px 1fr",gap:16 }}>
+            {/* Threat gauge */}
+            <div style={{ background:C.card,border:`1px solid ${tColor}40`,borderRadius:12,padding:20,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:8 }}>
+              <div style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em" }}>Threat Level</div>
+              <div style={{ position:"relative",width:100,height:100 }}>
+                <svg width="100" height="100" viewBox="0 0 100 100">
+                  <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="8"/>
+                  <circle cx="50" cy="50" r="42" fill="none" stroke={tColor} strokeWidth="8"
+                    strokeDasharray={`${2*Math.PI*42}`}
+                    strokeDashoffset={`${2*Math.PI*42*(1-{CRITICAL:1,HIGH:0.75,MEDIUM:0.5,LOW:0.25}[threat])}`}
+                    strokeLinecap="round" transform="rotate(-90 50 50)"/>
+                </svg>
+                <div style={{ position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center" }}>
+                  <span className="mono" style={{ fontSize:11,fontWeight:700,color:tColor,textAlign:"center",lineHeight:1.2 }}>{threat}</span>
+                </div>
+              </div>
+              <div style={{ fontSize:12,color:C.subtle,textAlign:"center" }}>
+                {critical>0?`${critical} critical unresolved`:`${high} high severity active`}
+              </div>
+            </div>
+            {/* Quick stats */}
+            <div style={{ display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:8 }}>
+              {[
+                { label:"Open Alerts",    value:open,       color:"#f87171",  icon:"🔔", tab:"alerts"    },
+                { label:"Open Incidents", value:openInc,    color:"#fb923c",  icon:"📋", tab:"incidents" },
+                { label:"GRC Compliance", value:`${grcScore}%`,color:grcScore>=80?"#4ade80":grcScore>=60?"#fbbf24":"#f87171", icon:"🛡", tab:"grc" },
+                { label:"Avg MTTD",       value:`${avgMTTD}m`, color:C.cyan,  icon:"⏱", tab:"alerts"    },
+              ].map(s=>(
+                <button key={s.label} type="button" onClick={()=>setSideTab(s.tab)}
+                  style={{ background:C.card,border:`1px solid ${C.border}`,borderRadius:10,padding:"14px 16px",textAlign:"left",cursor:"pointer",transition:"border 0.15s" }}
+                  onMouseEnter={e=>e.currentTarget.style.borderColor=s.color}
+                  onMouseLeave={e=>e.currentTarget.style.borderColor=C.border}>
+                  <div style={{ fontSize:22,marginBottom:6 }}>{s.icon}</div>
+                  <div className="mono" style={{ fontSize:22,fontWeight:700,color:s.color }}>{s.value}</div>
+                  <div style={{ fontSize:12,color:C.subtle,marginTop:2 }}>{s.label}</div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Alert volume 24h chart */}
+          <div style={{ background:C.card,border:`1px solid ${C.border}`,borderRadius:12,padding:16 }}>
+            <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12 }}>
+              <div className="mono" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em" }}>Alert Volume — Last 24h</div>
+              <span className="mono" style={{ fontSize:11,color:C.subtle }}>{alerts.length} total</span>
+            </div>
+            <div style={{ display:"flex",alignItems:"flex-end",gap:3,height:60 }}>
+              {hours.map((h,i)=>(
+                <div key={i} className="tip-wrap" style={{ flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:2 }}>
+                  <div style={{ width:"100%",borderRadius:"2px 2px 0 0",background:h.v>0?C.cyan:"rgba(255,255,255,0.05)",height:`${Math.max((h.v/maxV)*52,h.v>0?4:2)}px`,transition:"height 0.3s ease",opacity:h.v>0?0.8:0.3 }}/>
+                  <span className="tip" style={{ bottom:"calc(100% + 4px)" }}>{h.h}: {h.v} alerts</span>
+                </div>
+              ))}
+            </div>
+            <div style={{ display:"flex",justifyContent:"space-between",marginTop:4 }}>
+              <span style={{ fontSize:10,color:C.muted }}>24h ago</span>
+              <span style={{ fontSize:10,color:C.muted }}>Now</span>
+            </div>
+          </div>
+
+          {/* Top alerts + Top incidents */}
+          <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:16 }}>
+            <div style={{ background:C.card,border:`1px solid ${C.border}`,borderRadius:12,padding:16 }}>
+              <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10 }}>
+                <div className="mono" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em" }}>Top Alerts</div>
+                <button type="button" onClick={()=>setSideTab("alerts")} style={{ fontSize:11,color:C.cyan,background:"none",border:"none",cursor:"pointer",fontFamily:"IBM Plex Mono" }}>View all →</button>
+              </div>
+              {alerts.filter(a=>a.status!=="Closed").slice(0,4).map(a=>{
+                const s=SEV[a.severity];
+                return (
+                  <div key={a.id} style={{ display:"flex",alignItems:"center",gap:8,padding:"6px 0",borderBottom:`1px solid ${C.border}` }}>
+                    <span style={{ width:6,height:6,borderRadius:"50%",background:s.dot,flexShrink:0 }}/>
+                    <span style={{ fontSize:12,color:C.text,flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap" }}>{a.title}</span>
+                    <span className="mono" style={{ fontSize:10,color:s.text,flexShrink:0 }}>{a.severity}</span>
+                  </div>
+                );
+              })}
+            </div>
+            <div style={{ background:C.card,border:`1px solid ${C.border}`,borderRadius:12,padding:16 }}>
+              <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10 }}>
+                <div className="mono" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em" }}>Open Incidents</div>
+                <button type="button" onClick={()=>setSideTab("incidents")} style={{ fontSize:11,color:C.cyan,background:"none",border:"none",cursor:"pointer",fontFamily:"IBM Plex Mono" }}>View all →</button>
+              </div>
+              {incidents.filter(i=>i.status!=="Closed").slice(0,4).map(inc=>{
+                const ss=INC_STATUS_COLOR[inc.status]||INC_STATUS_COLOR.New;
+                return (
+                  <div key={inc.id} style={{ display:"flex",alignItems:"center",gap:8,padding:"6px 0",borderBottom:`1px solid ${C.border}` }}>
+                    <span className="mono" style={{ fontSize:10,color:C.subtle,flexShrink:0 }}>{inc.id}</span>
+                    <span style={{ fontSize:12,color:C.text,flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap" }}>{inc.title}</span>
+                    <span className="mono" style={{ fontSize:10,color:ss.c,flexShrink:0 }}>{inc.status}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* MITRE active + Latest KEVs */}
+          <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:16 }}>
+            <div style={{ background:C.card,border:`1px solid ${C.border}`,borderRadius:12,padding:16 }}>
+              <div className="mono" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:10 }}>Active MITRE Tactics</div>
+              {MITRE_ACTIVE.map((t,i)=>{
+                const m = MITRE.find(m=>m.tactic===t);
+                return (
+                  <div key={t} style={{ display:"flex",alignItems:"center",gap:8,marginBottom:6 }}>
+                    <div style={{ width:8,height:8,borderRadius:2,background:m?.color||C.cyan,flexShrink:0 }}/>
+                    <span style={{ fontSize:12,color:C.text,flex:1 }}>{t}</span>
+                    <span className="mono" style={{ fontSize:10,color:C.subtle }}>{m?.count||1} alert{m?.count!==1?"s":""}</span>
+                  </div>
+                );
+              })}
+            </div>
+            <div style={{ background:C.card,border:`1px solid ${C.border}`,borderRadius:12,padding:16 }}>
+              <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10 }}>
+                <div className="mono" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em" }}>Latest KEVs</div>
+                <div style={{ display:"flex",alignItems:"center",gap:4 }}><Dot live={true}/><span style={{ fontSize:10,color:C.subtle }}>{kevs.length} loaded</span></div>
+              </div>
+              {kevs.slice(0,4).map((v,i)=>(
+                <div key={i} style={{ padding:"5px 0",borderBottom:`1px solid ${C.border}` }}>
+                  <div className="mono" style={{ fontSize:10,color:"#f87171",marginBottom:1 }}>{v.cveID}</div>
+                  <div style={{ fontSize:11,color:C.text,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap" }}>{v.vendorProject} — {v.product}</div>
+                </div>
+              ))}
+              {!kevs.length && <div className="pulse" style={{ fontSize:12,color:C.subtle }}>Loading KEV feed...</div>}
+            </div>
+          </div>
+
+          {/* Activity feed summary */}
+          <div style={{ background:C.card,border:`1px solid ${C.border}`,borderRadius:12,padding:16 }}>
+            <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10 }}>
+              <div className="mono" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em" }}>Recent Activity</div>
+              <div style={{ display:"flex",alignItems:"center",gap:4 }}><Dot live={true}/><span style={{ fontSize:10,color:C.subtle }}>Live</span></div>
+            </div>
+            <div style={{ display:"flex",flexDirection:"column",gap:6 }}>
+              {activity.map((a,i)=>(
+                <div key={i} style={{ display:"flex",alignItems:"center",gap:10 }}>
+                  <span className="mono" style={{ fontSize:10,color:C.cyan,width:58,flexShrink:0 }}>{a.id}</span>
+                  <span style={{ fontSize:12,color:C.text,flex:1 }}>{a.msg}</span>
+                  <span className="mono" style={{ fontSize:10,color:C.subtle,flexShrink:0 }}>{timeAgo(a.offsetMs)}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+        </div>
+      );
+    }
+
+    // ── Threat Hunt ───────────────────────────────────────────────────────────
+    const THREAT_FEED = [
+      { id:"OTX-001", title:"Cobalt Strike Beacon Infrastructure", severity:"HIGH",   source:"AlienVault OTX", iocs:["185.220.101.45","10.0.2.99"],        tags:["CobaltStrike","C2","APT"],          time:5*60*1000  },
+      { id:"OTX-002", title:"LockBit 3.0 Ransomware Campaign",    severity:"CRITICAL",source:"AlienVault OTX", iocs:["45.33.32.156","104.21.89.33"],        tags:["Ransomware","LockBit","Extortion"],  time:18*60*1000 },
+      { id:"OTX-003", title:"Phishing Kit Targeting O365",         severity:"MEDIUM",  source:"AlienVault OTX", iocs:["phish-kit.xyz","192.168.1.1"],        tags:["Phishing","O365","Credential"],      time:32*60*1000 },
+      { id:"OTX-004", title:"ProxyShell Exchange Exploitation",    severity:"HIGH",    source:"AlienVault OTX", iocs:["CVE-2021-34473","198.51.100.42"],     tags:["Exchange","ProxyShell","RCE"],       time:45*60*1000 },
+      { id:"OTX-005", title:"Emotet Botnet Resurgence",            severity:"HIGH",    source:"CISA Advisory",  iocs:["203.0.113.0","malware.example.com"],  tags:["Emotet","Botnet","Loader"],         time:67*60*1000 },
+      { id:"OTX-006", title:"SSH Scanning Campaign from TOR Nodes",severity:"MEDIUM",  source:"AbuseIPDB",      iocs:["185.220.101.45","45.33.32.156"],      tags:["TOR","Scanner","Brute Force"],      time:89*60*1000 },
+    ];
+
+    const MITRE_MATRIX = [
+      { id:"TA0001", name:"Initial Access",      techniques:["Phishing","Drive-by","Supply Chain"],           active:false },
+      { id:"TA0002", name:"Execution",           techniques:["PowerShell","WMI","Scripting"],                 active:true  },
+      { id:"TA0003", name:"Persistence",         techniques:["Registry","Scheduled Task","Boot Autostart"],   active:false },
+      { id:"TA0004", name:"Privilege Escalation",techniques:["Sudo","Access Token","Process Injection"],      active:false },
+      { id:"TA0005", name:"Defense Evasion",     techniques:["Obfuscation","Rootkit","Masquerading"],         active:false },
+      { id:"TA0006", name:"Credential Access",   techniques:["Brute Force","Credential Dumping","Keylog"],    active:true  },
+      { id:"TA0007", name:"Discovery",           techniques:["Network Scan","Account Discovery","File Query"],active:false },
+      { id:"TA0008", name:"Lateral Movement",    techniques:["Pass-the-Hash","RDP","SMB/WinRM"],              active:true  },
+      { id:"TA0009", name:"Collection",          techniques:["Archive","Data Staged","Keylogging"],           active:false },
+      { id:"TA0010", name:"Exfiltration",        techniques:["C2 Channel","Alt Protocol","Scheduled"],        active:true  },
+      { id:"TA0011", name:"Command & Control",   techniques:["Application Layer","Encrypted Channel","DNS"],  active:true  },
+      { id:"TA0040", name:"Impact",              techniques:["Data Encrypted","Defacement","DoS"],            active:false },
+    ];
+
+    function ThreatHunt() {
+      const [iocQuery,   setIocQuery]   = useState("");
+      const [iocResults, setIocResults] = useState([]);
+      const [iocLoading, setIocLoading] = useState(false);
+      const [selTactic,  setSelTactic]  = useState(null);
+      const [activeTab,  setActiveTab]  = useState("feed"); // feed | ioc | matrix
+
+      const runIOC = () => {
+        if (!iocQuery.trim()) return;
+        setIocLoading(true);
+        setTimeout(()=>{
+          const queries = iocQuery.split(/[\n,\s]+/).filter(Boolean);
+          const results = queries.map(q=>({ query:q, ...(MOCK_IOC[q.trim()]||{safe:null,score:null,vendor:"Unknown",country:"—",reports:0,tags:["No data"]}) }));
+          setIocResults(results);
+          setIocLoading(false);
+        },900);
+      };
+
+      return (
+        <div style={{ display:"flex",flexDirection:"column",height:"100%",overflow:"hidden" }}>
+          <div style={{ borderBottom:`1px solid ${C.border}`,display:"flex",flexShrink:0 }}>
+            {[{key:"feed",label:"Threat Feed"},{key:"ioc",label:"IOC Lookup"},{key:"matrix",label:"MITRE Matrix"}].map(t=>(
+              <button key={t.key} type="button" onClick={()=>setActiveTab(t.key)}
+                style={{ padding:"11px 18px",fontSize:11,textTransform:"uppercase",letterSpacing:"0.1em",background:"none",border:"none",cursor:"pointer",fontFamily:"IBM Plex Mono",borderBottom:activeTab===t.key?`2px solid ${C.cyan}`:"2px solid transparent",color:activeTab===t.key?C.cyan:C.subtle }}>{t.label}</button>
+            ))}
+          </div>
+          <div style={{ flex:1,overflowY:"auto",padding:16 }}>
+
+            {activeTab==="feed" && (
+              <div style={{ display:"flex",flexDirection:"column",gap:10 }}>
+                <div style={{ display:"flex",alignItems:"center",gap:8,marginBottom:4 }}>
+                  <Dot live={true}/><span style={{ fontSize:12,color:C.subtle }}>Live threat intelligence from AlienVault OTX, CISA, and AbuseIPDB</span>
+                </div>
+                {THREAT_FEED.map(t=>{
+                  const s = SEV[t.severity]||SEV.LOW;
+                  return (
+                    <div key={t.id} style={{ background:C.card,border:`1px solid ${C.border}`,borderLeft:`3px solid ${s.dot}`,borderRadius:8,padding:14 }}>
+                      <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6 }}>
+                        <div style={{ display:"flex",alignItems:"center",gap:8 }}>
+                          <span className="mono" style={{ fontSize:10,color:C.subtle }}>{t.id}</span>
+                          <span className="mono" style={{ fontSize:11,color:s.text,padding:"1px 6px",borderRadius:3,background:s.bg,border:`1px solid ${s.border}` }}>{t.severity}</span>
+                        </div>
+                        <div style={{ display:"flex",gap:8,fontSize:11,color:C.subtle }}>
+                          <span>{t.source}</span>
+                          <span className="mono">{timeAgo(t.time)}</span>
+                        </div>
+                      </div>
+                      <div style={{ fontSize:14,fontWeight:600,color:C.bright,marginBottom:8 }}>{t.title}</div>
+                      <div style={{ display:"flex",gap:6,flexWrap:"wrap",marginBottom:6 }}>
+                        {t.tags.map(tag=><span key={tag} className="mono" style={{ fontSize:10,padding:"2px 6px",borderRadius:3,background:"rgba(255,255,255,0.04)",border:`1px solid ${C.border}`,color:C.secondary }}>{tag}</span>)}
+                      </div>
+                      <div style={{ fontSize:11,color:C.subtle }}>
+                        IOCs: {t.iocs.map((ioc,i)=><span key={i} className="mono" style={{ color:C.cyan,marginRight:8 }}>{ioc}</span>)}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {activeTab==="ioc" && (
+              <div style={{ display:"flex",flexDirection:"column",gap:14 }}>
+                <div>
+                  <div style={{ fontSize:12,color:C.subtle,marginBottom:8 }}>Enter one or multiple IPs, hashes, or domains — separated by commas or new lines.</div>
+                  <textarea value={iocQuery} onChange={e=>setIocQuery(e.target.value)}
+                    placeholder={"185.220.101.45\n45.33.32.156\n8.8.8.8"}
+                    rows={4}
+                    style={{ width:"100%",background:C.card,border:`1px solid ${C.border}`,borderRadius:6,padding:"10px 12px",fontSize:13,color:C.bright,fontFamily:"IBM Plex Mono",resize:"vertical" }}/>
+                  <button type="button" onClick={runIOC} style={{ marginTop:8,padding:"8px 20px",background:C.cyanDim,border:`1px solid rgba(34,211,238,0.3)`,borderRadius:6,color:C.cyan,fontSize:12,fontFamily:"IBM Plex Mono",cursor:"pointer" }}>
+                    {iocLoading?"Scanning...":"Bulk Scan"}
+                  </button>
+                  <span style={{ marginLeft:12,fontSize:11,color:C.subtle }}>Demo: 185.220.101.45, 45.33.32.156, 8.8.8.8, 1.1.1.1</span>
+                </div>
+                {iocResults.length>0 && (
+                  <div style={{ display:"flex",flexDirection:"column",gap:8 }}>
+                    <div className="mono" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em" }}>{iocResults.length} Results</div>
+                    {iocResults.map((r,i)=>(
+                      <div key={i} style={{ background:C.card,border:`1px solid ${r.safe===false?"rgba(239,68,68,0.3)":r.safe===true?"rgba(74,222,128,0.3)":C.border}`,borderRadius:8,padding:12 }}>
+                        <div style={{ display:"flex",justifyContent:"space-between",marginBottom:6 }}>
+                          <span className="mono" style={{ fontSize:13,color:C.bright }}>{r.query}</span>
+                          <span className="mono" style={{ fontSize:12,fontWeight:700,color:r.safe===false?"#f87171":r.safe===true?"#4ade80":"#fbbf24" }}>{r.safe===false?"MALICIOUS":r.safe===true?"CLEAN":"UNKNOWN"}</span>
+                        </div>
+                        {r.score!==null && (
+                          <div style={{ display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8,fontSize:11 }}>
+                            {[["Score",`${r.score}/100`],["Vendor",r.vendor],["Country",r.country],["Reports",r.reports]].map(([k,v])=>(
+                              <div key={k}><div style={{ color:C.subtle }}>{k}</div><div className="mono" style={{ color:C.text }}>{v}</div></div>
+                            ))}
+                          </div>
+                        )}
+                        {r.tags && <div style={{ display:"flex",gap:4,flexWrap:"wrap",marginTop:6 }}>
+                          {r.tags.map(t=><span key={t} className="mono" style={{ fontSize:10,padding:"1px 5px",borderRadius:3,border:`1px solid ${C.border}`,color:C.secondary }}>{t}</span>)}
+                        </div>}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {activeTab==="matrix" && (
+              <div>
+                <div style={{ fontSize:12,color:C.subtle,marginBottom:14 }}>MITRE ATT&CK Enterprise — active tactics highlighted based on current alerts and incidents.</div>
+                <div style={{ display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8 }}>
+                  {MITRE_MATRIX.map(tactic=>(
+                    <button key={tactic.id} type="button" onClick={()=>setSelTactic(selTactic?.id===tactic.id?null:tactic)}
+                      style={{ textAlign:"left",padding:"10px 12px",borderRadius:8,border:`1px solid ${selTactic?.id===tactic.id?C.cyan:tactic.active?"rgba(239,68,68,0.4)":C.border}`,background:selTactic?.id===tactic.id?C.cyanDim:tactic.active?"rgba(239,68,68,0.08)":C.card,cursor:"pointer",transition:"all 0.15s" }}>
+                      <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4 }}>
+                        <span className="mono" style={{ fontSize:9,color:C.subtle }}>{tactic.id}</span>
+                        {tactic.active && <span style={{ width:6,height:6,borderRadius:"50%",background:"#dc2626",display:"inline-block" }}/>}
+                      </div>
+                      <div style={{ fontSize:12,fontWeight:500,color:tactic.active?C.bright:C.text,marginBottom:6 }}>{tactic.name}</div>
+                      <div style={{ display:"flex",gap:3,flexWrap:"wrap" }}>
+                        {tactic.techniques.map(t=><span key={t} style={{ fontSize:9,padding:"1px 4px",borderRadius:2,background:"rgba(255,255,255,0.04)",color:C.subtle }}>{t}</span>)}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+                {selTactic && (
+                  <div style={{ marginTop:14,background:C.card,border:`1px solid ${C.cyan}40`,borderRadius:8,padding:14 }}>
+                    <div className="mono" style={{ fontSize:12,color:C.cyan,marginBottom:6 }}>{selTactic.id} — {selTactic.name}</div>
+                    <div style={{ fontSize:12,color:C.text,marginBottom:8 }}>
+                      {selTactic.active ? `Active in ${alerts.filter(a=>MITRE.find(m=>m.tactic===selTactic.name)).length||1} alert(s) and ${INCIDENTS_RAW.filter(i=>i.tactic===selTactic.name).length||0} incident(s).` : "No active alerts or incidents mapped to this tactic."}
+                    </div>
+                    <div className="mono" style={{ fontSize:11,color:C.subtle,marginBottom:6 }}>Techniques observed:</div>
+                    <div style={{ display:"flex",gap:6,flexWrap:"wrap" }}>
+                      {selTactic.techniques.map(t=><span key={t} style={{ fontSize:11,padding:"3px 8px",borderRadius:4,border:`1px solid ${C.border}`,color:C.secondary }}>{t}</span>)}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+          </div>
+        </div>
+      );
+    }
+
+    // ── Reports ───────────────────────────────────────────────────────────────
+    function ReportsPanel() {
+      const [aiStatus, setAiStatus] = useState("idle");
+      const [summary,  setSummary]  = useState("");
+      const grcScore = Math.round((CONTROLS_RAW.filter(c=>c.status==="Implemented").length/CONTROLS_RAW.length)*100);
+      const closed   = INCIDENTS_RAW.filter(i=>i.status==="Closed");
+      const open     = INCIDENTS_RAW.filter(i=>i.status!=="Closed");
+
+      const generateSummary = async () => {
+        setAiStatus("loading"); setSummary("");
+        try {
+          const payload = {
+            weeklySummary: {
+              alerts: ALERTS_RAW.length,
+              critical: ALERTS_RAW.filter(a=>a.severity==="CRITICAL").length,
+              incidents: INCIDENTS_RAW.length,
+              closedIncidents: closed.length,
+              grcScore,
+              topTactics: MITRE.slice(0,3).map(m=>m.tactic),
+              topThreats: INCIDENTS_RAW.slice(0,3).map(i=>i.title),
+            }
+          };
+          const res = await fetch(SUPABASE_URL,{ method:"POST",headers:sbHeaders(),body:JSON.stringify(payload) });
+          const data = await res.json();
+          if (!res.ok||data.error) throw new Error(data.error||"Error");
+          setSummary(data.summary || data.guidance || "Summary generated successfully.");
+          setAiStatus("done");
+        } catch(e) { setSummary(e.message); setAiStatus("error"); }
+      };
+
+      return (
+        <div style={{ flex:1,overflowY:"auto",padding:20,display:"flex",flexDirection:"column",gap:16 }}>
+
+          {/* AI Weekly Summary */}
+          <div style={{ background:C.card,border:`1px solid ${C.border}`,borderRadius:12,padding:16 }}>
+            <div style={{ display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12 }}>
+              <div style={{ display:"flex",alignItems:"center",gap:8 }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" fill={C.purple}/><path d="M12 2v3M12 19v3M2 12h3M19 12h3" stroke={C.purple} strokeWidth="1.5" strokeLinecap="round"/></svg>
+                <span className="mono" style={{ fontSize:12,color:C.purple,textTransform:"uppercase",letterSpacing:"0.1em" }}>AI Weekly Threat Summary</span>
+                {aiStatus==="loading" && <Spinner/>}
+              </div>
+              {aiStatus==="idle"&&<button type="button" onClick={generateSummary} style={{ padding:"6px 14px",background:C.purpleDim,border:`1px solid rgba(167,139,250,0.4)`,borderRadius:6,color:C.purple,fontSize:11,fontFamily:"IBM Plex Mono",cursor:"pointer" }}>Generate</button>}
+              {aiStatus==="done"&&<button type="button" onClick={()=>{setAiStatus("idle");setSummary("");}} style={{ padding:"6px 14px",background:"none",border:`1px solid ${C.border}`,borderRadius:6,color:C.subtle,fontSize:11,fontFamily:"IBM Plex Mono",cursor:"pointer" }}>Clear</button>}
+            </div>
+            {aiStatus==="idle"&&<div style={{ fontSize:12,color:C.subtle,borderRadius:8,border:`1px solid rgba(167,139,250,0.15)`,background:C.purpleDim,padding:12 }}>Generate an AI-written weekly threat summary covering alert trends, incident status, GRC compliance, and recommended focus areas for the coming week.</div>}
+            {aiStatus==="loading"&&(
+              <div style={{ borderRadius:8,border:`1px solid rgba(167,139,250,0.2)`,background:C.purpleDim,padding:14,display:"flex",flexDirection:"column",gap:8 }}>
+                {["Aggregating alert data...","Reviewing incident timeline...","Analyzing GRC posture...","Writing summary..."].map((s,i)=>(
+                  <div key={i} className="pulse mono" style={{ display:"flex",alignItems:"center",gap:8,fontSize:12,color:C.subtle,animationDelay:`${i*0.3}s` }}>
+                    <span style={{ width:5,height:5,borderRadius:"50%",background:C.purple,display:"inline-block" }}/>{s}
+                  </div>
+                ))}
+              </div>
+            )}
+            {aiStatus==="done"&&summary&&<div style={{ fontSize:13,color:C.text,lineHeight:1.8,borderRadius:8,border:`1px solid rgba(167,139,250,0.2)`,background:C.purpleDim,padding:14 }}>{summary}</div>}
+            {aiStatus==="error"&&<div style={{ borderRadius:8,border:"1px solid rgba(239,68,68,0.3)",background:"rgba(239,68,68,0.05)",padding:12,fontSize:12,color:"#f87171" }}>{summary}</div>}
+          </div>
+
+          {/* GRC Snapshot */}
+          <div style={{ background:C.card,border:`1px solid ${C.border}`,borderRadius:12,padding:16 }}>
+            <div className="mono" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:12 }}>GRC Compliance Snapshot</div>
+            <div style={{ display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8,marginBottom:12 }}>
+              {[["Score",`${grcScore}%`,grcScore>=80?"#4ade80":grcScore>=60?"#fbbf24":"#f87171"],
+                ["Implemented",CONTROLS_RAW.filter(c=>c.status==="Implemented").length,"#4ade80"],
+                ["Gaps",CONTROLS_RAW.filter(c=>c.status==="Not Started").length,"#f87171"]].map(([k,v,c])=>(
+                <div key={k} style={{ textAlign:"center",padding:10,borderRadius:8,border:`1px solid ${C.border}` }}>
+                  <div className="mono" style={{ fontSize:20,fontWeight:700,color:c }}>{v}</div>
+                  <div style={{ fontSize:11,color:C.subtle,marginTop:2 }}>{k}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{ display:"flex",gap:8 }}>
+              <button type="button" style={{ padding:"7px 16px",background:C.cyanDim,border:`1px solid rgba(34,211,238,0.3)`,borderRadius:6,color:C.cyan,fontSize:12,fontFamily:"IBM Plex Mono",cursor:"pointer" }} onClick={()=>alert("PDF export coming in v3.0")}>Export PDF</button>
+              <button type="button" style={{ padding:"7px 16px",background:"rgba(255,255,255,0.04)",border:`1px solid ${C.border}`,borderRadius:6,color:C.subtle,fontSize:12,fontFamily:"IBM Plex Mono",cursor:"pointer" }} onClick={()=>alert("CSV export coming in v3.0")}>Export CSV</button>
+            </div>
+          </div>
+
+          {/* Incident report cards */}
+          <div>
+            <div className="mono" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:10 }}>Incident Reports ({INCIDENTS_RAW.length})</div>
+            <div style={{ display:"flex",flexDirection:"column",gap:8 }}>
+              {INCIDENTS_RAW.map(inc=>{
+                const ss  = INC_STATUS_COLOR[inc.status]||INC_STATUS_COLOR.New;
+                const sev = SEV[inc.severity]||SEV.LOW;
+                return (
+                  <div key={inc.id} style={{ background:C.card,border:`1px solid ${C.border}`,borderLeft:`3px solid ${sev.dot}`,borderRadius:8,padding:14 }}>
+                    <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6 }}>
+                      <div style={{ display:"flex",alignItems:"center",gap:8 }}>
+                        <span className="mono" style={{ fontSize:11,color:C.subtle }}>{inc.id}</span>
+                        <span className="mono" style={{ fontSize:11,color:ss.c,padding:"1px 6px",borderRadius:3,background:ss.bg,border:`1px solid ${ss.b}` }}>{inc.status}</span>
+                      </div>
+                      <span className="mono" style={{ fontSize:11,color:C.subtle }}>{timeAgo(inc.createdMs)}</span>
+                    </div>
+                    <div style={{ fontSize:13,fontWeight:600,color:C.bright,marginBottom:4 }}>{inc.title}</div>
+                    <div style={{ fontSize:12,color:C.secondary,marginBottom:8 }}>{inc.notes}</div>
+                    <div style={{ display:"flex",gap:8,alignItems:"center" }}>
+                      <span style={{ fontSize:11,color:C.subtle }}>Assignee: <span style={{ color:C.text }}>{inc.assignee}</span></span>
+                      <span style={{ color:C.muted }}>·</span>
+                      <span style={{ fontSize:11,color:C.subtle }}>Tactic: <span className="mono" style={{ color:C.cyan }}>{inc.tactic}</span></span>
+                      <span style={{ color:C.muted }}>·</span>
+                      <span style={{ fontSize:11,color:C.subtle }}>{inc.timeline.length} timeline entries</span>
+                      <button type="button" style={{ marginLeft:"auto",padding:"3px 10px",fontSize:11,fontFamily:"IBM Plex Mono",background:"rgba(255,255,255,0.04)",border:`1px solid ${C.border}`,borderRadius:4,color:C.subtle,cursor:"pointer" }} onClick={()=>alert("Full PDF report export coming in v3.0")}>Export</button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+        </div>
+      );
+    }
+
+    // ── Settings ──────────────────────────────────────────────────────────────
+    function SettingsPanel({ setSideTab }) {
+      const [name,  setName]  = useState("Mohamed Mohamud");
+      const [role,  setRole]  = useState("SOC Analyst Tier 1");
+      const [org,   setOrg]   = useState("Kulan Group Ltd");
+      const [saved, setSaved] = useState(false);
+
+      const save = () => { setSaved(true); setTimeout(()=>setSaved(false),2000); };
+
+      return (
+        <div style={{ flex:1,overflowY:"auto",padding:20,display:"flex",flexDirection:"column",gap:16,maxWidth:640 }}>
+
+          {/* Analyst Profile */}
+          <div style={{ background:C.card,border:`1px solid ${C.border}`,borderRadius:12,padding:16 }}>
+            <div className="mono" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:14 }}>Analyst Profile</div>
+            {[["Display Name",name,setName],["Role",role,setRole],["Organization",org,setOrg]].map(([label,val,setter])=>(
+              <div key={label} style={{ marginBottom:12 }}>
+                <div style={{ fontSize:12,color:C.subtle,marginBottom:4 }}>{label}</div>
+                <input value={val} onChange={e=>setter(e.target.value)}
+                  style={{ width:"100%",background:"rgba(255,255,255,0.03)",border:`1px solid ${C.border}`,borderRadius:6,padding:"8px 12px",fontSize:13,color:C.bright,fontFamily:"DM Sans,sans-serif" }}/>
+              </div>
+            ))}
+            <button type="button" onClick={save} style={{ padding:"7px 18px",background:C.cyanDim,border:`1px solid rgba(34,211,238,0.3)`,borderRadius:6,color:C.cyan,fontSize:12,fontFamily:"IBM Plex Mono",cursor:"pointer" }}>
+              {saved?"Saved ✓":"Save Profile"}
+            </button>
+          </div>
+
+          {/* Feed Status */}
+          <div style={{ background:C.card,border:`1px solid ${C.border}`,borderRadius:12,padding:16 }}>
+            <div className="mono" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:14 }}>Connected Feeds</div>
+            {[
+              { name:"CISA Known Exploited Vulnerabilities", status:"Live",    note:"Public API — no key required"     },
+              { name:"AlienVault OTX",                       status:"Demo",    note:"Connect API key for live data"    },
+              { name:"AbuseIPDB",                            status:"Demo",    note:"Connect API key for live lookup"  },
+              { name:"VirusTotal",                           status:"Degraded",note:"API key not configured"           },
+              { name:"Anthropic Claude API",                 status:"Live",    note:"Routed via Supabase Edge Function"},
+            ].map(f=>{
+              const c = f.status==="Live"?"#4ade80":f.status==="Demo"?"#fbbf24":"#f87171";
+              return (
+                <div key={f.name} style={{ display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 0",borderBottom:`1px solid ${C.border}` }}>
+                  <div>
+                    <div style={{ fontSize:13,color:C.text }}>{f.name}</div>
+                    <div style={{ fontSize:11,color:C.subtle,marginTop:2 }}>{f.note}</div>
+                  </div>
+                  <span className="mono" style={{ fontSize:11,padding:"2px 8px",borderRadius:4,color:c,background:`${c}18`,border:`1px solid ${c}40`,flexShrink:0,marginLeft:12 }}>{f.status}</span>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Keyboard Shortcuts */}
+          <div style={{ background:C.card,border:`1px solid ${C.border}`,borderRadius:12,padding:16 }}>
+            <div className="mono" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:14 }}>Keyboard Shortcuts</div>
+            {[["j / ↓","Next alert in queue"],["k / ↑","Previous alert in queue"],["Escape","Deselect current alert"],["/ ","Focus the search bar"],["?","Open shortcuts overlay"]].map(([k,v])=>(
+              <div key={k} style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10 }}>
+                <span className="mono" style={{ fontSize:12,background:"rgba(255,255,255,0.06)",border:`1px solid ${C.border2}`,borderRadius:4,padding:"2px 8px",color:C.cyan }}>{k}</span>
+                <span style={{ fontSize:12,color:C.secondary }}>{v}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Platform Info */}
+          <div style={{ background:C.card,border:`1px solid ${C.border}`,borderRadius:12,padding:16 }}>
+            <div className="mono" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:14 }}>Platform Info</div>
+            {[["Version","SentinelIQ v2.0"],["Phases","1–4 Complete"],["Stack","React · Supabase · Claude API"],["Built By","Mohamed Mohamud"],["Portfolio","mmohamud.me"],["GitHub","mmohamud25"]].map(([k,v])=>(
+              <div key={k} style={{ display:"flex",justifyContent:"space-between",padding:"7px 0",borderBottom:`1px solid ${C.border}`,fontSize:12 }}>
+                <span style={{ color:C.subtle }}>{k}</span>
+                <span className="mono" style={{ color:C.text }}>{v}</span>
+              </div>
+            ))}
+            <div style={{ marginTop:12,display:"flex",gap:8 }}>
+              <a href="https://mmohamud.me" target="_blank" style={{ padding:"6px 14px",background:C.cyanDim,border:`1px solid rgba(34,211,238,0.3)`,borderRadius:6,color:C.cyan,fontSize:12,fontFamily:"IBM Plex Mono",textDecoration:"none" }}>Portfolio</a>
+              <a href="https://github.com/mmohamud25" target="_blank" style={{ padding:"6px 14px",background:"rgba(255,255,255,0.04)",border:`1px solid ${C.border}`,borderRadius:6,color:C.secondary,fontSize:12,fontFamily:"IBM Plex Mono",textDecoration:"none" }}>GitHub</a>
+              <a href="https://linkedin.com/in/mohamed-2-mohamud" target="_blank" style={{ padding:"6px 14px",background:"rgba(255,255,255,0.04)",border:`1px solid ${C.border}`,borderRadius:6,color:C.secondary,fontSize:12,fontFamily:"IBM Plex Mono",textDecoration:"none" }}>LinkedIn</a>
+            </div>
+          </div>
+
         </div>
       );
     }
@@ -1432,34 +1962,26 @@
             {/* Sidebar */}
             <Sidebar active={sideTab} onChange={setSideTab}/>
 
-            {/* Coming Soon pages for non-dashboard/grc/incidents tabs */}
-            {sideTab !== "dashboard" && sideTab !== "alerts" && sideTab !== "grc" && sideTab !== "incidents" && (
-              <div style={{ flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:16,color:C.muted }}>
-                <svg width="48" height="48" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeWidth="1" d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-                <div style={{ textAlign:"center" }}>
-                  <div className="mono" style={{ fontSize:14,color:C.secondary,marginBottom:6,textTransform:"capitalize" }}>{sideTab}</div>
-                  <div style={{ fontSize:13,color:C.subtle }}>Coming in Phase 4 — Incident Management System</div>
-                </div>
-                <button type="button" onClick={()=>setSideTab("dashboard")} style={{ padding:"8px 20px",background:C.cyanDim,border:`1px solid rgba(34,211,238,0.3)`,borderRadius:6,color:C.cyan,fontSize:12,fontFamily:"IBM Plex Mono",cursor:"pointer" }}>Back to Dashboard</button>
-              </div>
-            )}
+            {/* Dashboard — command center */}
+            {sideTab==="dashboard" && <div style={{ flex:1,overflow:"hidden",display:"flex",flexDirection:"column" }}><DashboardOverview alerts={alerts} incidents={INCIDENTS_RAW} kevs={kevs} activity={activity} setSideTab={setSideTab}/></div>}
+
+            {/* Threat Hunt */}
+            {sideTab==="hunt" && <div style={{ flex:1,overflow:"hidden",display:"flex",flexDirection:"column" }}><ThreatHunt alerts={alerts}/></div>}
+
+            {/* Reports */}
+            {sideTab==="reports" && <div style={{ flex:1,overflow:"hidden",display:"flex",flexDirection:"column" }}><ReportsPanel/></div>}
+
+            {/* Settings */}
+            {sideTab==="settings" && <div style={{ flex:1,overflow:"hidden",display:"flex",flexDirection:"column" }}><SettingsPanel setSideTab={setSideTab}/></div>}
 
             {/* Incident Management */}
-            {sideTab === "incidents" && (
-              <div style={{ flex:1,overflow:"hidden",display:"flex",flexDirection:"column" }}>
-                <IncidentDashboard/>
-              </div>
-            )}
+            {sideTab==="incidents" && <div style={{ flex:1,overflow:"hidden",display:"flex",flexDirection:"column" }}><IncidentDashboard/></div>}
 
             {/* GRC Tracker */}
-            {sideTab === "grc" && (
-              <div style={{ flex:1,overflow:"hidden",display:"flex",flexDirection:"column" }}>
-                <GRCDashboard/>
-              </div>
-            )}
+            {sideTab==="grc" && <div style={{ flex:1,overflow:"hidden",display:"flex",flexDirection:"column" }}><GRCDashboard/></div>}
 
-            {/* Dashboard content */}
-            {(sideTab === "dashboard" || sideTab === "alerts") && (<>
+            {/* Alert Queue — only shown when sideTab is alerts */}
+            {sideTab === "alerts" && (<>
 
             {/* Alert Queue */}
             <div style={{ width:272,borderRight:`1px solid ${C.border}`,display:"flex",flexDirection:"column",overflow:"hidden",flexShrink:0 }}>
@@ -1545,7 +2067,7 @@
                 </div>
                 <div style={{ marginTop:22,border:`1px solid ${C.border}`,borderRadius:8,padding:12,background:C.card }}>
                   <div className="mono" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:12 }}>Platform Roadmap</div>
-                  {[["Phase 1","Threat Dashboard","LIVE",C.cyan,C.cyanDim],["Phase 2","AI Analyst Agent","LIVE",C.green,C.greenDim],["Phase 3","GRC Tracker","LIVE",C.green,C.greenDim],["Phase 4","Incident Mgmt","LIVE",C.green,C.greenDim]].map(([p,n,s,c,b])=>(
+                  {[["Phase 1","Threat Dashboard","LIVE",C.cyan,C.cyanDim],["Phase 2","AI Analyst Agent","LIVE",C.green,C.greenDim],["Phase 3","GRC Tracker","LIVE",C.green,C.greenDim],["Phase 4","Incident Mgmt","LIVE",C.green,C.greenDim],["Phase 5","Live Data Feeds","NEXT","#fbbf24","rgba(234,179,8,0.1)"]].map(([p,n,s,c,b])=>(
                     <div key={p} style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8 }}>
                       <div style={{ fontSize:12 }}><span className="mono" style={{ color:C.muted }}>{p} </span><span style={{ color:C.secondary }}>{n}</span></div>
                       <span className="mono" style={{ fontSize:11,padding:"2px 8px",borderRadius:4,color:c,background:b,border:`1px solid ${c}40` }}>{s}</span>
