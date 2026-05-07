@@ -236,7 +236,7 @@
     }
 
     // ── Avatar Dropdown ───────────────────────────────────────────────────────
-    function AvatarMenu({ onAbout }) {
+    function AvatarMenu({ onAbout, onSettings }) {
       const [open, setOpen] = useState(false);
       const ref = useRef(null);
       useEffect(()=>{
@@ -245,10 +245,11 @@
         return()=>document.removeEventListener("mousedown",h);
       },[]);
       const items = [
-        { label:"About This Project", action: onAbout },
-        { label:"Portfolio", href:"https://mmohamud.me" },
-        { label:"GitHub", href:"https://github.com/mmohamud25" },
-        { label:"LinkedIn", href:"https://linkedin.com/in/mohamed-2-mohamud" },
+        { label:"⚙ Settings & Profile", action: ()=>{ onSettings(); setOpen(false); } },
+        { label:"About This Project",   action: ()=>{ onAbout();    setOpen(false); } },
+        { label:"Portfolio",  href:"https://mmohamud.me" },
+        { label:"GitHub",     href:"https://github.com/mmohamud25" },
+        { label:"LinkedIn",   href:"https://linkedin.com/in/mohamed-2-mohamud" },
       ];
       return (
         <div ref={ref} style={{ position:"relative" }}>
@@ -2125,30 +2126,31 @@
       const sc = STATUS_COLOR[alert.status] || C.subtle;
       return (
         <button type="button" onClick={()=>onClick(alert)} aria-label={`Alert ${alert.id}: ${alert.title}`}
-          style={{ width:"100%",textAlign:"left",padding:"10px 12px",borderRadius:6,
+          style={{ width:"100%",textAlign:"left",padding:"9px 10px",borderRadius:6,
             border:`1px solid ${selected ? s.border : C.border}`,
             borderLeft: selected ? `3px solid ${s.accent}` : `3px solid transparent`,
-            background: selected ? s.bg : C.card,
-            marginBottom:6,cursor:"pointer",transition:"all 0.15s"
+            background: selected ? s.bg : "rgba(255,255,255,0.01)",
+            marginBottom:5,cursor:"pointer",transition:"all 0.15s"
           }}
-          onMouseEnter={e=>{ if(!selected){ e.currentTarget.style.borderColor=C.border2; e.currentTarget.style.background="#131e30"; }}}
-          onMouseLeave={e=>{ if(!selected){ e.currentTarget.style.borderColor=C.border; e.currentTarget.style.background=C.card; }}}
+          onMouseEnter={e=>{ if(!selected){ e.currentTarget.style.borderColor=C.border2; e.currentTarget.style.background=C.card; }}}
+          onMouseLeave={e=>{ if(!selected){ e.currentTarget.style.borderColor=C.border; e.currentTarget.style.background="rgba(255,255,255,0.01)"; }}}
         >
-          <div style={{ display:"flex",justifyContent:"space-between",marginBottom:4 }}>
-            <div style={{ display:"flex",alignItems:"center",gap:6 }}>
-              <span style={{ width:6,height:6,borderRadius:"50%",background:s.dot,display:"inline-block",flexShrink:0 }}/>
-              <span className="mono" style={{ fontSize:11,fontWeight:700,color:s.text }}>{alert.severity}</span>
-              <span className="mono" style={{ fontSize:10,color:C.subtle }}>{alert.id}</span>
-            </div>
-            <div style={{ display:"flex",alignItems:"center",gap:6 }}>
-              {alert.status !== "Open" && <span className="mono" style={{ fontSize:10,padding:"1px 6px",borderRadius:3,color:sc,background:`${sc}18`,border:`1px solid ${sc}30` }}>{alert.status}</span>}
-              <span style={{ fontSize:11,color:C.subtle }}>{timeStr}</span>
-            </div>
+          {/* Row 1: severity + id + time (always on one line) */}
+          <div style={{ display:"flex",alignItems:"center",gap:6,marginBottom:4 }}>
+            <span style={{ width:6,height:6,borderRadius:"50%",background:s.dot,display:"inline-block",flexShrink:0 }}/>
+            <span className="mono" style={{ fontSize:10,fontWeight:700,color:s.text }}>{alert.severity}</span>
+            <span className="mono" style={{ fontSize:10,color:C.muted }}>{alert.id}</span>
+            <span style={{ marginLeft:"auto",fontSize:10,color:C.subtle,flexShrink:0 }}>{timeStr}</span>
           </div>
-          <div style={{ fontSize:13,color:C.bright,fontWeight:500,lineHeight:1.3 }}>{alert.title}</div>
-          <div style={{ fontSize:11,color:C.subtle,marginTop:4,display:"flex",alignItems:"center",gap:6 }}>
-            {alert.live && <span className="mono" style={{ fontSize:9,padding:"1px 5px",borderRadius:3,color:"#4ade80",background:"rgba(74,222,128,0.1)",border:"1px solid rgba(74,222,128,0.3)" }}>LIVE</span>}
-            <span>{alert.asset} · {alert.source}</span>
+          {/* Row 2: title */}
+          <div style={{ fontSize:12,color:C.bright,fontWeight:500,lineHeight:1.3,marginBottom:4,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap" }}>{alert.title}</div>
+          {/* Row 3: asset + status badge (always on one line) */}
+          <div style={{ display:"flex",alignItems:"center",gap:6 }}>
+            {alert.live && <span className="mono" style={{ fontSize:9,padding:"1px 4px",borderRadius:2,color:"#4ade80",background:"rgba(74,222,128,0.1)",border:"1px solid rgba(74,222,128,0.3)",flexShrink:0 }}>LIVE</span>}
+            <span style={{ fontSize:11,color:C.subtle,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap" }}>{alert.asset}</span>
+            {alert.status !== "Open" && (
+              <span className="mono" style={{ marginLeft:"auto",fontSize:9,padding:"1px 5px",borderRadius:3,color:sc,background:`${sc}15`,border:`1px solid ${sc}30`,flexShrink:0,whiteSpace:"nowrap" }}>{alert.status}</span>
+            )}
           </div>
         </button>
       );
@@ -2208,48 +2210,82 @@
 
     // ── IOCLookup ─────────────────────────────────────────────────────────────
     function IOCLookup() {
-      const [q,setQ]=useState(""), [r,setR]=useState(null), [loading,setLoading]=useState(false), [searched,setSearched]=useState(false);
-      const go=()=>{ if(!q.trim())return; setLoading(true);setSearched(true); setTimeout(()=>{setR(MOCK_IOC[q.trim()]||null);setLoading(false);},800); };
+      const [q,       setQ]       = useState("");
+      const [result,  setResult]  = useState(null);
+      const [loading, setLoading] = useState(false);
+      const [searched,setSearched]= useState(false);
+      const [errMsg,  setErrMsg]  = useState("");
+
+      const go = async () => {
+        if (!q.trim()) return;
+        setLoading(true); setSearched(true); setResult(null); setErrMsg("");
+        try {
+          const indicator = encodeURIComponent(q.trim().slice(0, 256));
+          const res  = await fetch(`${SUPABASE_URL}?action=ioc&indicator=${indicator}`, { headers: sbHeaders() });
+          const data = await res.json();
+          if (!res.ok || data.error) throw new Error(data.error || "Lookup failed");
+          setResult(data);
+        } catch (e) {
+          setErrMsg(e.message);
+        }
+        setLoading(false);
+      };
+
+      const r = result;
+      const verdictColor = { MALICIOUS:"#f87171", SUSPICIOUS:"#fbbf24", CLEAN:"#4ade80", UNKNOWN:"#94a3b8" };
+      const vc = r ? (verdictColor[r.verdict] || verdictColor.UNKNOWN) : "#94a3b8";
+
       return (
-        <div style={{ display:"flex",flexDirection:"column",gap:12 }}>
-          <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center" }}>
+        <div style={{ display:"flex",flexDirection:"column",gap:10 }}>
+          <div style={{ display:"flex",gap:8,alignItems:"center" }}>
             <div className="mono" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em" }}>IOC Lookup</div>
-            <span className="mono" style={{ fontSize:10,color:C.muted,background:C.card,border:`1px solid ${C.border}`,padding:"2px 6px",borderRadius:4 }}>Demo — 4 sample IPs</span>
+            <span className="mono" style={{ fontSize:10,color:C.muted,background:C.card,border:`1px solid ${C.border}`,padding:"2px 6px",borderRadius:4 }}>AbuseIPDB · VirusTotal</span>
           </div>
           <div style={{ display:"flex",gap:8 }}>
-            <input value={q} onChange={e=>setQ(e.target.value)} onKeyDown={e=>e.key==="Enter"&&go()} placeholder="IP, hash, domain..."
+            <input value={q} onChange={e=>setQ(e.target.value)} onKeyDown={e=>e.key==="Enter"&&go()} placeholder="IP, SHA256, domain..."
               aria-label="IOC Lookup input"
-              style={{ flex:1,background:C.card,border:`1px solid ${C.border}`,borderRadius:6,padding:"8px 12px",fontSize:13,color:C.bright,fontFamily:"IBM Plex Mono",transition:"border 0.15s,box-shadow 0.15s" }}/>
-            <button type="button" onClick={go} aria-label="Scan IOC" style={{ padding:"8px 16px",background:C.cyanDim,border:`1px solid rgba(34,211,238,0.3)`,borderRadius:6,color:C.cyan,fontSize:11,fontFamily:"IBM Plex Mono",cursor:"pointer" }}>SCAN</button>
+              style={{ flex:1,background:C.card,border:`1px solid ${C.border}`,borderRadius:6,padding:"8px 12px",fontSize:13,color:C.bright,fontFamily:"IBM Plex Mono" }}/>
+            <button type="button" onClick={go} disabled={loading} style={{ padding:"8px 16px",background:C.cyanDim,border:`1px solid rgba(34,211,238,0.3)`,borderRadius:6,color:C.cyan,fontSize:11,fontFamily:"IBM Plex Mono",cursor:"pointer" }}>
+              {loading ? "..." : "SCAN"}
+            </button>
           </div>
-          <div className="mono" style={{ fontSize:11,color:C.muted }}>Try: 185.220.101.45 · 45.33.32.156 · 8.8.8.8</div>
+          <div className="mono" style={{ fontSize:11,color:C.muted }}>IPv4 · SHA256 · MD5 · Domain</div>
           {loading && <div className="pulse" style={{ fontSize:12,color:C.subtle }}>Querying threat intel feeds...</div>}
-          {!loading&&searched&&r&&(
-            <div style={{ borderRadius:8,border:`1px solid ${r.safe?"rgba(74,222,128,0.3)":"rgba(239,68,68,0.3)"}`,background:r.safe?"rgba(74,222,128,0.06)":"rgba(239,68,68,0.06)",padding:12 }}>
-              <div style={{ display:"flex",justifyContent:"space-between",marginBottom:8 }}>
-                <span className="mono" style={{ fontSize:14,fontWeight:700,color:r.safe?C.green:"#f87171" }}>{r.safe?"CLEAN":"MALICIOUS"}</span>
-                <span className="mono" style={{ fontSize:11,padding:"2px 8px",borderRadius:4,background:r.score>50?"rgba(239,68,68,0.15)":"rgba(74,222,128,0.15)",color:r.score>50?"#f87171":C.green }}>Score: {r.score}/100</span>
+          {errMsg  && <div style={{ borderRadius:7,border:"1px solid rgba(239,68,68,0.3)",background:"rgba(239,68,68,0.05)",padding:10,fontSize:12,color:"#f87171" }}>{errMsg}</div>}
+          {!loading && searched && r && (
+            <div style={{ borderRadius:8,border:`1px solid ${vc}30`,background:`${vc}08`,padding:14 }}>
+              <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10 }}>
+                <div>
+                  <span className="mono" style={{ fontSize:16,fontWeight:700,color:vc }}>{r.verdict}</span>
+                  {!r.hasRealData && <span style={{ fontSize:10,color:C.muted,marginLeft:8 }}>(demo data — add API keys for live results)</span>}
+                </div>
+                <span className="mono" style={{ fontSize:10,color:C.subtle,padding:"2px 7px",borderRadius:3,border:`1px solid ${C.border}` }}>{r.type}</span>
               </div>
-              <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:6,fontSize:12,marginBottom:8 }}>
-                {[["Vendor",r.vendor],["Country",r.country],["Reports",r.reports]].map(([k,v])=>(
-                  <div key={k}><span style={{ color:C.subtle }}>{k}: </span><span className="mono" style={{ color:C.text }}>{v}</span></div>
-                ))}
+              <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,fontSize:12 }}>
+                {r.abuseScore !== undefined && <>
+                  <div><span style={{ color:C.subtle }}>Abuse Score: </span><span className="mono" style={{ color:vc }}>{r.abuseScore}/100</span></div>
+                  <div><span style={{ color:C.subtle }}>Reports: </span><span className="mono" style={{ color:C.text }}>{r.totalReports}</span></div>
+                  <div><span style={{ color:C.subtle }}>Country: </span><span className="mono" style={{ color:C.text }}>{r.country}</span></div>
+                  <div><span style={{ color:C.subtle }}>ISP: </span><span className="mono" style={{ color:C.text }}>{String(r.isp||"unknown").slice(0,30)}</span></div>
+                  {r.usageType && <div style={{ gridColumn:"span 2" }}><span style={{ color:C.subtle }}>Usage: </span><span className="mono" style={{ color:C.text }}>{r.usageType}</span></div>}
+                </>}
+                {r.vtMalicious !== undefined && <>
+                  <div><span style={{ color:C.subtle }}>VT Malicious: </span><span className="mono" style={{ color:r.vtMalicious>0?"#f87171":C.green }}>{r.vtMalicious}</span></div>
+                  <div><span style={{ color:C.subtle }}>VT Clean: </span><span className="mono" style={{ color:C.text }}>{r.vtClean}</span></div>
+                  {r.vtReputation !== 0 && <div><span style={{ color:C.subtle }}>Reputation: </span><span className="mono" style={{ color:C.text }}>{r.vtReputation}</span></div>}
+                </>}
               </div>
-              <div style={{ display:"flex",gap:6,flexWrap:"wrap" }}>
-                {r.tags.map(t=><span key={t} className="mono" style={{ fontSize:11,padding:"2px 8px",borderRadius:20,border:`1px solid ${C.border2}`,color:C.secondary }}>{t}</span>)}
-              </div>
-            </div>
-          )}
-          {!loading&&searched&&!r&&(
-            <div style={{ borderRadius:8,border:"1px solid rgba(234,179,8,0.2)",background:"rgba(234,179,8,0.05)",padding:12 }}>
-              <div className="mono" style={{ color:"#fbbf24",fontSize:13,marginBottom:4 }}>UNKNOWN</div>
-              <div style={{ color:C.subtle,fontSize:12 }}>Not in demo data. Try: 185.220.101.45</div>
+              {Array.isArray(r.vtTags) && r.vtTags.length > 0 && (
+                <div style={{ display:"flex",gap:4,flexWrap:"wrap",marginTop:8 }}>
+                  {r.vtTags.map((t,i)=><span key={i} className="mono" style={{ fontSize:10,padding:"2px 6px",borderRadius:3,border:`1px solid ${C.border}`,color:C.secondary }}>{t}</span>)}
+                </div>
+              )}
+              {r.lastSeen && <div style={{ fontSize:11,color:C.subtle,marginTop:6 }}>Last reported: {r.lastSeen}</div>}
             </div>
           )}
         </div>
       );
     }
-
     // ── CISAFeed ──────────────────────────────────────────────────────────────
     function CISAFeed({ vulns, loaded }) {
       if(!loaded) return <div className="pulse" style={{ fontSize:12,color:C.subtle,padding:"20px 0",textAlign:"center" }}>Loading CISA KEV feed...</div>;
@@ -2509,7 +2545,7 @@
             <div style={{ display:"flex",alignItems:"center",gap:10,flexShrink:0 }}>
               <span className="header-clock mono" style={{ fontSize:11,color:C.muted,whiteSpace:"nowrap" }}>{time.toUTCString().slice(0,-4)} UTC</span>
               <button type="button" onClick={()=>setShowKeys(true)} title="Keyboard shortcuts (?)" style={{ background:"none",border:`1px solid ${C.border}`,borderRadius:4,color:C.subtle,fontSize:11,padding:"2px 6px",cursor:"pointer",fontFamily:"IBM Plex Mono" }}>?</button>
-              <AvatarMenu onAbout={()=>setShowAbout(true)}/>
+              <AvatarMenu onAbout={()=>setShowAbout(true)} onSettings={()=>setSideTab("settings")}/>
             </div>
           </header>
 
@@ -2558,100 +2594,187 @@
             {/* Alert Queue — only shown when sideTab is alerts */}
             {sideTab === "alerts" && (<>
 
-            {/* Alert Queue */}
-            <div style={{ width:272,borderRight:`1px solid ${C.border}`,display:"flex",flexDirection:"column",overflow:"hidden",flexShrink:0 }}>
-              <div style={{ padding:"10px 12px",borderBottom:`1px solid ${C.border}`,display:"flex",justifyContent:"space-between",alignItems:"center",flexShrink:0 }}>
-                <span className="mono" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em" }}>Alert Queue</span>
-                <div style={{ display:"flex",alignItems:"center",gap:5 }}><Dot live={true}/><span className="mono" style={{ fontSize:11,color:"#f87171" }}>{open} Open</span></div>
-              </div>
-              {/* Search */}
-              <div style={{ padding:"8px 12px",borderBottom:`1px solid ${C.border}`,flexShrink:0 }}>
-                <div style={{ position:"relative" }}>
-                  <svg style={{ position:"absolute",left:8,top:"50%",transform:"translateY(-50%)",pointerEvents:"none" }} width="12" height="12" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="8" stroke={C.subtle} strokeWidth="2"/><path d="M21 21l-4.35-4.35" stroke={C.subtle} strokeWidth="2" strokeLinecap="round"/></svg>
-                  <input ref={searchRef} value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search alerts..."
-                    aria-label="Search alerts"
-                    style={{ width:"100%",background:C.card,border:`1px solid ${C.border}`,borderRadius:5,padding:"5px 8px 5px 24px",fontSize:12,color:C.bright,fontFamily:"DM Sans,sans-serif",transition:"border 0.15s,box-shadow 0.15s" }}/>
+            {/* LEFT: Alert list */}
+            <div style={{ width:280,borderRight:`1px solid ${C.border}`,display:"flex",flexDirection:"column",overflow:"hidden",flexShrink:0 }}>
+
+              {/* Column header */}
+              <div style={{ padding:"10px 14px",borderBottom:`1px solid ${C.border}`,flexShrink:0,background:C.surface }}>
+                <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6 }}>
+                  <span className="mono" style={{ fontSize:11,fontWeight:700,color:C.bright,textTransform:"uppercase",letterSpacing:"0.12em" }}>Alert Queue</span>
+                  <div style={{ display:"flex",alignItems:"center",gap:6 }}>
+                    <Dot live={true}/>
+                    <span className="mono" style={{ fontSize:10,color:C.subtle }}>{filteredAlerts.length} shown</span>
+                  </div>
+                </div>
+                <div style={{ display:"flex",gap:6,alignItems:"center" }}>
+                  <div style={{ position:"relative",flex:1 }}>
+                    <svg style={{ position:"absolute",left:8,top:"50%",transform:"translateY(-50%)",pointerEvents:"none" }} width="11" height="11" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="8" stroke={C.muted} strokeWidth="2"/><path d="M21 21l-4.35-4.35" stroke={C.muted} strokeWidth="2" strokeLinecap="round"/></svg>
+                    <input ref={searchRef} value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search alerts..."
+                      aria-label="Search alerts"
+                      style={{ width:"100%",background:C.card,border:`1px solid ${C.border}`,borderRadius:5,padding:"5px 8px 5px 26px",fontSize:12,color:C.bright,fontFamily:"DM Sans,sans-serif" }}/>
+                  </div>
+                  {search && <button type="button" onClick={()=>setSearch("")} style={{ background:"none",border:"none",color:C.muted,cursor:"pointer",fontSize:14,padding:"0 2px",lineHeight:1 }}>✕</button>}
                 </div>
               </div>
-              <div style={{ flex:1,overflowY:"auto",padding:8 }}>
+
+              {/* Severity filter chips */}
+              <div style={{ padding:"6px 10px",borderBottom:`1px solid ${C.border}`,display:"flex",gap:4,flexShrink:0,background:"rgba(255,255,255,0.01)" }}>
+                {[{key:null,label:"All",count:alerts.length},{key:"CRITICAL",label:"Crit",count:alerts.filter(a=>a.severity==="CRITICAL").length},{key:"HIGH",label:"High",count:alerts.filter(a=>a.severity==="HIGH").length},{key:"Open",label:"Open",count:open}].map(f=>{
+                  const isActive = filter===f.key || (f.key===null&&!filter);
+                  const fColor = f.key==="CRITICAL"?"#f87171":f.key==="HIGH"?"#fb923c":f.key==="Open"?C.cyan:C.subtle;
+                  return (
+                    <button key={String(f.key)} type="button" onClick={()=>setFilter(f.key==="Open"?"Open":f.key)}
+                      style={{ flex:1,padding:"3px 0",fontSize:10,fontFamily:"IBM Plex Mono",borderRadius:4,cursor:"pointer",border:`1px solid ${isActive?(fColor+"60"):C.border}`,background:isActive?`${fColor}15`:"none",color:isActive?fColor:C.muted,transition:"all 0.15s" }}>
+                      {f.label} <span style={{ opacity:0.7 }}>{f.count}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Alert list */}
+              <div style={{ flex:1,overflowY:"auto",padding:"6px 8px" }}>
                 {filteredAlerts.length === 0
-                  ? <div style={{ fontSize:12,color:C.subtle,textAlign:"center",padding:"20px 0" }}>No alerts match</div>
+                  ? (
+                    <div style={{ display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",height:120,gap:8,color:C.muted }}>
+                      <svg width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeWidth="1.5" d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg>
+                      <span style={{ fontSize:12 }}>No alerts match</span>
+                      {(search||filter) && <button type="button" onClick={()=>{setSearch("");setFilter(null);}} style={{ fontSize:11,color:C.cyan,background:"none",border:"none",cursor:"pointer",fontFamily:"IBM Plex Mono" }}>Clear filters</button>}
+                    </div>
+                  )
                   : filteredAlerts.map(a=><AlertRow key={a.id} alert={a} onClick={setSel} selected={sel?.id===a.id} timeStr={timeAgo(a.offsetMs)}/>)
                 }
               </div>
-              {filter && <div style={{ padding:"6px 12px",borderTop:`1px solid ${C.border}`,fontSize:11,color:C.cyan,background:C.cyanDim,display:"flex",justifyContent:"space-between",alignItems:"center",flexShrink:0 }}>
-                <span className="mono">Filter: {filter}</span>
-                <button type="button" onClick={()=>setFilter(null)} style={{ background:"none",border:"none",color:C.cyan,cursor:"pointer",fontSize:11,fontFamily:"IBM Plex Mono" }}>✕ Clear</button>
-              </div>}
+
+              {/* Active filter chip */}
+              {filter && (
+                <div style={{ padding:"5px 12px",borderTop:`1px solid ${C.border}`,fontSize:11,color:C.cyan,background:C.cyanDim,display:"flex",justifyContent:"space-between",alignItems:"center",flexShrink:0 }}>
+                  <span className="mono">Filtered: {filter}</span>
+                  <button type="button" onClick={()=>setFilter(null)} style={{ background:"none",border:"none",color:C.cyan,cursor:"pointer",fontSize:11,fontFamily:"IBM Plex Mono" }}>✕ Clear</button>
+                </div>
+              )}
+
+              {/* Footer hint */}
+              <div style={{ padding:"5px 12px",borderTop:`1px solid ${C.border}`,flexShrink:0,display:"flex",justifyContent:"space-between",alignItems:"center" }}>
+                <span style={{ fontSize:10,color:C.muted }}>j/k to navigate</span>
+                <button type="button" onClick={()=>setShowKeys(true)} style={{ fontSize:10,color:C.muted,background:"none",border:"none",cursor:"pointer",fontFamily:"IBM Plex Mono" }}>? shortcuts</button>
+              </div>
             </div>
 
-            {/* Center */}
+            {/* CENTER: Alert detail */}
             <div style={{ flex:1,display:"flex",flexDirection:"column",overflow:"hidden",minWidth:0 }}>
-              <div style={{ borderBottom:`1px solid ${C.border}`,display:"flex",flexShrink:0 }}>
-                {[{key:"alerts",label:"Alert Detail + AI Analysis"},{key:"cisa",label:`CISA KEV ${loaded?`(${kevs.length})`:"..."}`}].map(t=>(
-                  <button key={t.key} type="button" onClick={()=>setTab(t.key)} style={{ padding:"12px 18px",fontSize:11,textTransform:"uppercase",letterSpacing:"0.1em",background:"none",border:"none",cursor:"pointer",fontFamily:"IBM Plex Mono",borderBottom:tab===t.key?`2px solid ${C.cyan}`:"2px solid transparent",color:tab===t.key?C.cyan:C.subtle,transition:"color 0.15s" }}>{t.label}</button>
-                ))}
+
+              {/* Tab strip */}
+              <div style={{ borderBottom:`1px solid ${C.border}`,display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0,background:C.surface,paddingRight:12 }}>
+                <div style={{ display:"flex" }}>
+                  {[{key:"alerts",label:"Alert Detail",sub:"AI Analysis + SOAR"},{key:"cisa",label:"CISA KEV",sub:loaded?`${kevs.length} live CVEs`:"Loading..."}].map(t=>(
+                    <button key={t.key} type="button" onClick={()=>setTab(t.key)}
+                      style={{ padding:"10px 18px",fontSize:11,background:"none",border:"none",cursor:"pointer",fontFamily:"IBM Plex Mono",borderBottom:tab===t.key?`2px solid ${C.cyan}`:"2px solid transparent",color:tab===t.key?C.cyan:C.subtle,transition:"color 0.15s",textAlign:"left" }}>
+                      <div style={{ textTransform:"uppercase",letterSpacing:"0.1em" }}>{t.label}</div>
+                      <div style={{ fontSize:9,color:tab===t.key?C.subtle:C.muted,marginTop:1,letterSpacing:"0.05em" }}>{t.sub}</div>
+                    </button>
+                  ))}
+                </div>
+                {sel && tab==="alerts" && (
+                  <div style={{ display:"flex",alignItems:"center",gap:6 }}>
+                    <span className="mono" style={{ fontSize:10,color:C.muted }}>{sel.id}</span>
+                    <span style={{ fontSize:10,color:C.muted }}>·</span>
+                    <span className="mono" style={{ fontSize:10,color:SEV[sel.severity]?.text||C.subtle }}>{sel.severity}</span>
+                  </div>
+                )}
               </div>
+
               <div style={{ flex:1,overflowY:"auto",padding:16 }}>
                 {tab==="alerts" && <AlertDetail alert={sel} onTriage={handleTriage} onCreateIncident={(a)=>{ setSideTab("incidents"); setToast(`Incident created from ${a.id}`); }}/>}
-                {tab==="cisa"   && <div><div style={{ display:"flex",alignItems:"center",gap:8,marginBottom:12 }}><Dot live={true}/><span style={{ fontSize:11,color:C.subtle }}>Live CISA Known Exploited Vulnerabilities — proxied via Supabase Edge Function</span></div><CISAFeed vulns={kevs} loaded={loaded}/></div>}
+                {tab==="cisa" && (
+                  <div>
+                    <div style={{ display:"flex",alignItems:"center",gap:8,marginBottom:14,padding:"10px 12px",background:C.card,borderRadius:8,border:`1px solid ${C.border}` }}>
+                      <Dot live={true}/>
+                      <span style={{ fontSize:12,color:C.text,fontWeight:500 }}>CISA Known Exploited Vulnerabilities</span>
+                      <span className="mono" style={{ fontSize:10,color:C.subtle,marginLeft:"auto" }}>Proxied via Supabase · Updated daily</span>
+                    </div>
+                    <CISAFeed vulns={kevs} loaded={loaded}/>
+                  </div>
+                )}
               </div>
             </div>
 
-            {/* Right Panel */}
-            <div style={{ width:288,borderLeft:`1px solid ${C.border}`,display:"flex",flexDirection:"column",overflow:"hidden",flexShrink:0 }}>
-              <div style={{ padding:"10px 14px",borderBottom:`1px solid ${C.border}`,flexShrink:0 }}>
-                <span className="mono" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em" }}>Threat Intel</span>
+            {/* RIGHT: Threat intel panel */}
+            <div style={{ width:272,borderLeft:`1px solid ${C.border}`,display:"flex",flexDirection:"column",overflow:"hidden",flexShrink:0 }}>
+
+              {/* Column header */}
+              <div style={{ padding:"10px 14px",borderBottom:`1px solid ${C.border}`,flexShrink:0,background:C.surface }}>
+                <span className="mono" style={{ fontSize:11,fontWeight:700,color:C.bright,textTransform:"uppercase",letterSpacing:"0.12em" }}>Threat Intel</span>
               </div>
-              <div style={{ flex:1,overflowY:"auto",padding:14 }}>
-                <IOCLookup/>
-                <div style={{ marginTop:22 }}>
-                  <div className="mono" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:12 }}>Activity Feed</div>
+
+              <div style={{ flex:1,overflowY:"auto" }}>
+
+                {/* IOC Lookup */}
+                <div style={{ padding:14,borderBottom:`1px solid ${C.border}` }}>
+                  <div style={{ display:"flex",alignItems:"center",gap:6,marginBottom:10 }}>
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="8" stroke={C.cyan} strokeWidth="1.5"/><path d="M21 21l-4.35-4.35" stroke={C.cyan} strokeWidth="1.5" strokeLinecap="round"/></svg>
+                    <span className="mono" style={{ fontSize:10,color:C.cyan,textTransform:"uppercase",letterSpacing:"0.1em" }}>IOC Lookup</span>
+                    <span style={{ marginLeft:"auto",fontSize:9,color:C.muted,fontFamily:"IBM Plex Mono" }}>AbuseIPDB · VT</span>
+                  </div>
+                  <IOCLookup/>
+                </div>
+
+                {/* Activity Feed */}
+                <div style={{ padding:14,borderBottom:`1px solid ${C.border}` }}>
+                  <div style={{ display:"flex",alignItems:"center",gap:6,marginBottom:10 }}>
+                    <Dot live={true}/>
+                    <span className="mono" style={{ fontSize:10,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em" }}>Activity Feed</span>
+                  </div>
                   {activity.map((a,i)=>{
                     const target = alerts.find(al=>al.id===a.id);
                     return (
                       <button key={i} type="button"
                         onClick={()=>{ if(target){ setSel(target); setSideTab("alerts"); } }}
-                        style={{ width:"100%",textAlign:"left",display:"flex",alignItems:"flex-start",gap:8,marginBottom:8,paddingBottom:8,borderBottom:i<activity.length-1?`1px solid ${C.border}`:"none",background:"none",border:"none",cursor:target?"pointer":"default",borderRadius:4,padding:"6px 4px",transition:"background 0.15s" }}
+                        style={{ width:"100%",textAlign:"left",display:"flex",alignItems:"center",gap:8,marginBottom:6,background:"none",border:"none",cursor:target?"pointer":"default",borderRadius:5,padding:"5px 6px",transition:"background 0.15s" }}
                         onMouseEnter={e=>{ if(target) e.currentTarget.style.background=C.card; }}
                         onMouseLeave={e=>{ e.currentTarget.style.background="none"; }}
                       >
-                        <span className="mono" style={{ fontSize:10,color:C.cyan,flexShrink:0,marginTop:1,width:58 }}>{a.id}</span>
+                        <span className="mono" style={{ fontSize:10,color:C.cyan,flexShrink:0,width:54 }}>{a.id}</span>
                         <div style={{ flex:1,minWidth:0 }}>
-                          <div style={{ fontSize:12,color:C.text,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap" }} title={a.msg}>{a.msg}</div>
-                          <div className="mono" style={{ fontSize:10,color:C.subtle,marginTop:2 }}>{timeAgo(a.offsetMs)}</div>
+                          <div style={{ fontSize:11,color:C.text,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap" }}>{a.msg}</div>
+                          <div className="mono" style={{ fontSize:10,color:C.subtle }}>{timeAgo(a.offsetMs)}</div>
                         </div>
-                        {target && <svg width="10" height="10" viewBox="0 0 24 24" fill="none" style={{ flexShrink:0,marginTop:3,color:C.muted }}><path d="M9 18l6-6-6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+                        {target && <svg width="9" height="9" viewBox="0 0 24 24" fill="none" style={{ flexShrink:0,color:C.muted }}><path d="M9 18l6-6-6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}
                       </button>
                     );
                   })}
                 </div>
-                <div style={{ marginTop:16 }}>
-                  <div className="mono" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:12 }}>MITRE ATT&CK</div>
+
+                {/* MITRE ATT&CK */}
+                <div style={{ padding:14,borderBottom:`1px solid ${C.border}` }}>
+                  <div style={{ display:"flex",alignItems:"center",gap:6,marginBottom:10 }}>
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.25C17.25 22.15 21 17.25 21 12V7L12 2z" stroke={C.purple} strokeWidth="1.5"/></svg>
+                    <span className="mono" style={{ fontSize:10,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em" }}>MITRE ATT&CK</span>
+                    <span style={{ marginLeft:"auto",fontSize:9,color:C.muted,fontFamily:"IBM Plex Mono" }}>Active tactics</span>
+                  </div>
                   {MITRE.map(({tactic,count,color})=>(
-                    <div key={tactic} style={{ marginBottom:10 }}>
-                      <div style={{ display:"flex",justifyContent:"space-between",fontSize:12,marginBottom:4 }}>
+                    <div key={tactic} style={{ marginBottom:8 }}>
+                      <div style={{ display:"flex",justifyContent:"space-between",fontSize:11,marginBottom:3 }}>
                         <span style={{ color:C.secondary }}>{tactic}</span>
                         <span className="mono" style={{ color:C.subtle }}>{count}</span>
                       </div>
-                      <div style={{ height:4,background:"rgba(255,255,255,0.05)",borderRadius:2,overflow:"hidden" }}>
+                      <div style={{ height:3,background:"rgba(255,255,255,0.05)",borderRadius:2,overflow:"hidden" }}>
                         <div style={{ height:"100%",background:color,borderRadius:2,width:`${(count/MITRE_MAX)*100}%`,transition:"width 0.5s ease" }}/>
                       </div>
                     </div>
                   ))}
                 </div>
-                <div style={{ marginTop:22,border:`1px solid ${C.border}`,borderRadius:8,padding:12,background:C.card }}>
-                  <div className="mono" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:12 }}>Platform Roadmap</div>
-                  {[["Phase 1","Threat Dashboard","LIVE",C.cyan,C.cyanDim],["Phase 2","AI Analyst Agent","LIVE",C.green,C.greenDim],["Phase 3","GRC Tracker","LIVE",C.green,C.greenDim],["Phase 4","Incident Mgmt","LIVE",C.green,C.greenDim],["Phase 5","Live Data Feeds","NEXT","#fbbf24","rgba(234,179,8,0.1)"]].map(([p,n,s,c,b])=>(
-                    <div key={p} style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8 }}>
-                      <div style={{ fontSize:12 }}><span className="mono" style={{ color:C.muted }}>{p} </span><span style={{ color:C.secondary }}>{n}</span></div>
-                      <span className="mono" style={{ fontSize:11,padding:"2px 8px",borderRadius:4,color:c,background:b,border:`1px solid ${c}40` }}>{s}</span>
-                    </div>
-                  ))}
+
+                {/* Attribution */}
+                <div style={{ padding:14 }}>
+                  <div style={{ fontSize:11,color:C.muted,lineHeight:1.8 }}>
+                    Portfolio project by <a href="https://mmohamud.me" target="_blank" style={{ color:C.cyan,textDecoration:"none" }}>Mohamed Mohamud</a>
+                    <br/>React · Supabase · Claude API
+                    <br/><a href="https://github.com/mmohamud25" target="_blank" style={{ color:C.subtle,textDecoration:"none" }}>GitHub</a>
+                    {" · "}
+                    <a href="https://linkedin.com/in/mohamed-2-mohamud" target="_blank" style={{ color:C.subtle,textDecoration:"none" }}>LinkedIn</a>
+                  </div>
                 </div>
-                <div style={{ marginTop:14,padding:"10px 12px",borderRadius:8,border:`1px solid ${C.border}`,background:C.card,fontSize:11,color:C.muted,lineHeight:1.7 }}>
-                  Portfolio project by <a href="https://mmohamud.me" target="_blank" style={{ color:C.cyan,textDecoration:"none" }}>Mohamed Mohamud</a>. SOC simulation — React, Supabase, Claude API. <a href="https://github.com/mmohamud25" target="_blank" style={{ color:C.subtle,textDecoration:"none" }}>GitHub</a>
-                </div>
+
               </div>
             </div>
 
