@@ -1299,7 +1299,37 @@
       );
 
       return (
-        <div style={{ flex:1,overflowY:"auto",padding:20,maxWidth:680 }}>
+        <div style={{ flex:1,overflow:"hidden",display:"flex" }}>
+
+          {/* Architecture Modal */}
+          {showArch && (
+            <div onClick={()=>setShowArch(false)} style={{ position:"fixed",inset:0,background:"rgba(0,0,0,0.7)",zIndex:200,display:"flex",alignItems:"center",justifyContent:"center",padding:24 }}>
+              <div onClick={e=>e.stopPropagation()} style={{ background:C.surface,border:`1px solid ${C.border2}`,borderRadius:12,padding:28,maxWidth:520,width:"100%",boxShadow:"0 24px 64px rgba(0,0,0,0.5)" }}>
+                <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16 }}>
+                  <span className="mono" style={{ fontSize:12,color:C.cyan,textTransform:"uppercase",letterSpacing:"0.1em" }}>System Architecture</span>
+                  <button type="button" onClick={()=>setShowArch(false)} style={{ background:"none",border:"none",color:C.subtle,cursor:"pointer",fontSize:16 }}>✕</button>
+                </div>
+                <div style={{ background:"rgba(0,0,0,0.4)",borderRadius:8,padding:16,fontFamily:"IBM Plex Mono",fontSize:12,color:C.subtle,lineHeight:2 }}>
+                  <div style={{ color:C.cyan,marginBottom:8 }}>// Request Flow</div>
+                  <div>Browser</div>
+                  <div>  │</div>
+                  <div>  ├─ External Feed API ─────────────┐</div>
+                  <div>  │                                  ▼</div>
+                  <div>  └─ AI requests ──────► <span style={{ color:C.green }}>Cloud Functions</span></div>
+                  <div>                                     │</div>
+                  <div>                      ┌──────────────┤</div>
+                  <div>                      ▼              ▼</div>
+                  <div>                 <span style={{ color:C.purple }}>AI Gateway</span>      <span style={{ color:"#fbbf24" }}>Threat Feeds</span></div>
+                </div>
+                <div style={{ marginTop:14,fontSize:11,color:C.subtle,lineHeight:1.7 }}>
+                  All AI requests route through a serverless function layer. The browser never communicates with the AI provider directly — credentials stay server-side only.
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Left column — main settings */}
+          <div style={{ flex:1,overflowY:"auto",padding:24,minWidth:0 }}>
 
           {/* Platform */}
           <Section title="Platform">
@@ -1311,7 +1341,7 @@
               </div>
               <div style={{ fontSize:12,color:C.secondary,lineHeight:1.7 }}>A portfolio project simulating a Tier-1 SOC dashboard with live threat intelligence, agentic AI alert triage, NIST CSF 2.0 GRC tracking, and full incident management. Built with React, Supabase Edge Functions, and the Claude API.</div>
             </div>
-            <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:14 }}>
+            <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:14 }}>
               {[["Phases Live","1–2–3–4"],["Framework","NIST CSF 2.0"],["AI","Anthropic Claude (via Supabase)"],["Backend","Supabase Edge Functions"],["Frontend","React + Tailwind CSS"],["Version","SentinelIQ v2.0"]].map(([k,v])=>(
                 <div key={k} style={{ padding:"8px 10px",borderRadius:6,border:`1px solid ${C.border}` }}>
                   <div style={{ fontSize:10,color:C.subtle,marginBottom:2 }}>{k}</div>
@@ -1319,24 +1349,9 @@
                 </div>
               ))}
             </div>
-            {/* Collapsible architecture */}
-            <button type="button" onClick={()=>setShowArch(s=>!s)} style={{ background:"none",border:`1px solid ${C.border}`,borderRadius:6,padding:"5px 12px",fontSize:11,color:C.subtle,fontFamily:"IBM Plex Mono",cursor:"pointer",marginBottom:showArch?8:0 }}>
-              {showArch?"▾ Hide Architecture":"▸ View Architecture"}
+            <button type="button" onClick={()=>setShowArch(true)} style={{ background:"none",border:`1px solid ${C.border}`,borderRadius:6,padding:"5px 12px",fontSize:11,color:C.subtle,fontFamily:"IBM Plex Mono",cursor:"pointer" }}>
+              ▸ View Architecture
             </button>
-            {showArch && (
-            <div style={{ background:"rgba(0,0,0,0.3)",borderRadius:8,padding:12,fontFamily:"IBM Plex Mono",fontSize:11,color:C.subtle,lineHeight:1.8,marginTop:8 }}>
-              <div style={{ color:C.cyan,marginBottom:4 }}>// System Architecture</div>
-              <div>Browser</div>
-              <div>  │</div>
-              <div>  ├─ External Feed API ─────────────┐</div>
-              <div>  │                                  ▼</div>
-              <div>  └─ AI requests ──────► <span style={{ color:C.green }}>Cloud Functions</span></div>
-              <div>                                     │</div>
-              <div>                      ┌──────────────┤</div>
-              <div>                      ▼              ▼</div>
-              <div>                 <span style={{ color:C.purple }}>AI Gateway</span>      <span style={{ color:"#fbbf24" }}>Threat Feeds</span></div>
-            </div>
-            )}
           </Section>
 
           {/* Analyst Profile */}
@@ -1468,6 +1483,71 @@
               Built May 2026 · Mohamed Mohamud · CompTIA Security+ · MS Business Analytics, Franklin University · Founder, Kulan Group Ltd
             </div>
           </Section>
+
+          </div>{/* end left column */}
+
+          {/* Right panel */}
+          <div style={{ width:300,flexShrink:0,borderLeft:`1px solid ${C.border}`,overflowY:"auto",padding:20,display:"flex",flexDirection:"column",gap:14 }}>
+
+            {/* Quick stats */}
+            <div>
+              <div className="mono" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:12 }}>Platform Status</div>
+              {[
+                { label:"AI Analyst",    status:"Active",   color:C.green  },
+                { label:"CISA KEV Feed", status:"Live",     color:C.green  },
+                { label:"AlienVault OTX",status:"Demo",     color:"#fbbf24"},
+                { label:"AbuseIPDB",     status:"Demo",     color:"#fbbf24"},
+                { label:"VirusTotal",    status:"Degraded", color:"#f87171"},
+              ].map(f=>(
+                <div key={f.label} style={{ display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 0",borderBottom:`1px solid ${C.border}` }}>
+                  <span style={{ fontSize:12,color:C.text }}>{f.label}</span>
+                  <div style={{ display:"flex",alignItems:"center",gap:5 }}>
+                    <span style={{ width:6,height:6,borderRadius:"50%",background:f.color,display:"inline-block" }}/>
+                    <span className="mono" style={{ fontSize:10,color:f.color }}>{f.status}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* GRC quick score */}
+            <div style={{ background:C.card,border:`1px solid ${C.border}`,borderRadius:10,padding:14 }}>
+              <div className="mono" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:10 }}>GRC Posture</div>
+              {(()=>{
+                const score = Math.round((CONTROLS_RAW.filter(c=>c.status==="Implemented").length/CONTROLS_RAW.length)*100);
+                const c = score>=80?C.green:score>=60?"#fbbf24":"#f87171";
+                return <>
+                  <div className="mono" style={{ fontSize:28,fontWeight:700,color:c,marginBottom:4 }}>{score}%</div>
+                  <div style={{ height:6,background:"rgba(255,255,255,0.05)",borderRadius:3,overflow:"hidden",marginBottom:8 }}>
+                    <div style={{ height:"100%",background:c,borderRadius:3,width:`${score}%`,transition:"width 0.5s" }}/>
+                  </div>
+                  <div style={{ fontSize:11,color:C.subtle }}>{CONTROLS_RAW.filter(c=>c.status==="Implemented").length} of {CONTROLS_RAW.length} controls implemented</div>
+                </>;
+              })()}
+            </div>
+
+            {/* Analyst card */}
+            <div style={{ background:C.card,border:`1px solid ${C.border}`,borderRadius:10,padding:14 }}>
+              <div className="mono" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:10 }}>Analyst on Duty</div>
+              <div style={{ display:"flex",alignItems:"center",gap:10,marginBottom:8 }}>
+                <div style={{ width:36,height:36,borderRadius:"50%",background:`linear-gradient(135deg,${C.cyan},${C.purple})`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0 }}>
+                  <span style={{ fontSize:14,fontWeight:700,color:"#fff" }}>{name.charAt(0)}</span>
+                </div>
+                <div>
+                  <div style={{ fontSize:13,fontWeight:600,color:C.bright }}>{name}</div>
+                  <div style={{ fontSize:11,color:C.subtle }}>{role}</div>
+                </div>
+              </div>
+              <div style={{ fontSize:11,color:C.subtle }}>{org}</div>
+            </div>
+
+            {/* Version */}
+            <div style={{ marginTop:"auto",fontSize:11,color:C.muted,lineHeight:1.8 }}>
+              <div className="mono" style={{ color:C.subtle,marginBottom:4 }}>SentinelIQ v2.0</div>
+              <div>React · Supabase · Claude API</div>
+              <div>NIST CSF 2.0 · MITRE ATT&CK</div>
+            </div>
+
+          </div>{/* end right panel */}
 
         </div>
       );
