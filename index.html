@@ -255,6 +255,7 @@
       const items = [
         { id:"dashboard", tip:"Dashboard",   icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M9 22V12h6v10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg> },
         { id:"alerts",    tip:"Alert Queue", icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg> },
+        { id:"alerts",    tip:"Alert Queue", icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg> },
         { id:"incidents", tip:"Incidents",   icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M14 2v6h6M12 18v-6M9 15h6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg> },
         { id:"grc",       tip:"GRC Tracker", icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.25C17.25 22.15 21 17.25 21 12V7L12 2z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M9 12l2 2 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg> },
         { id:"hunt",      tip:"Threat Hunt", icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="1.5"/><path d="M21 21l-4.35-4.35" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg> },
@@ -448,9 +449,10 @@
                   {["ALL",...INC_STATUSES].map(s=>{
                     const sc = INC_STATUS_COLOR[s];
                     const isActive = filterStatus===s;
+                    const label = s==="ALL"?"ALL":s.length>6?s.slice(0,7):s;
                     return (
                       <button key={s} type="button" onClick={()=>setFilterStatus(s)}
-                        style={{ fontSize:10,padding:"2px 7px",borderRadius:3,fontFamily:"IBM Plex Mono",cursor:"pointer",border:`1px solid ${isActive?(sc?.b||C.cyan):C.border}`,background:isActive?(sc?.bg||C.cyanDim):"none",color:isActive?(sc?.c||C.cyan):C.subtle }}>{s==="ALL"?"ALL":s.slice(0,4).toUpperCase()}</button>
+                        style={{ fontSize:10,padding:"2px 7px",borderRadius:3,fontFamily:"IBM Plex Mono",cursor:"pointer",border:`1px solid ${isActive?(sc?.b||C.cyan):C.border}`,background:isActive?(sc?.bg||C.cyanDim):"none",color:isActive?(sc?.c||C.cyan):C.subtle }}>{label}</button>
                     );
                   })}
                 </div>
@@ -1125,80 +1127,209 @@
 
     // ── Settings ──────────────────────────────────────────────────────────────
     function SettingsPanel({ setSideTab }) {
-      const [name,  setName]  = useState("Mohamed Mohamud");
-      const [role,  setRole]  = useState("SOC Analyst Tier 1");
-      const [org,   setOrg]   = useState("Kulan Group Ltd");
-      const [saved, setSaved] = useState(false);
+      const [name,       setName]       = useState("Mohamed Mohamud");
+      const [role,       setRole]       = useState("SOC Analyst Tier 1");
+      const [org,        setOrg]        = useState("Kulan Group Ltd");
+      const [saved,      setSaved]      = useState(false);
+      const [density,    setDensity]    = useState("comfortable");
+      const [timezone,   setTimezone]   = useState("UTC");
+      const [theme,      setTheme]      = useState("navy");
+      const [notifLevel, setNotifLevel] = useState("High");
+      const [channels,   setChannels]   = useState({ email:false, slack:false, pagerduty:false });
+      const [notifSaved, setNotifSaved] = useState(false);
+      const [testStatus, setTestStatus] = useState("idle");
+      const [feedToggles,setFeedToggles]= useState({ cisa:true, otx:true, abuse:true, vt:false });
 
       const save = () => { setSaved(true); setTimeout(()=>setSaved(false),2000); };
+      const saveNotif = () => { setNotifSaved(true); setTimeout(()=>setNotifSaved(false),2000); };
+      const testAI = async () => {
+        setTestStatus("loading");
+        try {
+          const res = await fetch(SUPABASE_URL,{ method:"POST",headers:sbHeaders(),body:JSON.stringify({ alert:{id:"TEST",severity:"LOW",title:"Connection test",source:"Settings",asset:"—",ip:"—",tactic:"—",status:"Open",description:"Test connection from Settings panel."} }) });
+          const data = await res.json();
+          setTestStatus(data.analysis ? "ok" : "error");
+        } catch { setTestStatus("error"); }
+        setTimeout(()=>setTestStatus("idle"),3000);
+      };
+
+      const Section = ({title,children}) => (
+        <div style={{ background:C.card,border:`1px solid ${C.border}`,borderRadius:12,padding:20,marginBottom:16 }}>
+          <div className="mono" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:16 }}>{title}</div>
+          {children}
+        </div>
+      );
+
+      const Toggle = ({on,onChange}) => (
+        <button type="button" onClick={()=>onChange(!on)} style={{ width:36,height:20,borderRadius:10,border:"none",cursor:"pointer",background:on?"#22d3ee":"rgba(255,255,255,0.1)",position:"relative",transition:"background 0.2s",flexShrink:0 }}>
+          <span style={{ position:"absolute",top:2,left:on?18:2,width:16,height:16,borderRadius:"50%",background:"#fff",transition:"left 0.2s",boxShadow:"0 1px 3px rgba(0,0,0,0.3)" }}/>
+        </button>
+      );
 
       return (
-        <div style={{ flex:1,overflowY:"auto",padding:20,display:"flex",flexDirection:"column",gap:16,maxWidth:640 }}>
+        <div style={{ flex:1,overflowY:"auto",padding:20,maxWidth:680 }}>
+
+          {/* Platform */}
+          <Section title="Platform">
+            <div style={{ marginBottom:14,padding:12,borderRadius:8,background:"rgba(34,211,238,0.05)",border:`1px solid ${C.cyanDim}` }}>
+              <div style={{ display:"flex",alignItems:"center",gap:10,marginBottom:6 }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.25C17.25 22.15 21 17.25 21 12V7L12 2z" fill="rgba(0,212,255,0.2)" stroke="#00D4FF" strokeWidth="1.5"/></svg>
+                <span className="mono" style={{ fontSize:13,fontWeight:700,color:C.cyan }}>SentinelIQ v2.0</span>
+                <span style={{ fontSize:11,color:C.subtle }}>— AI-Powered Security Operations Platform</span>
+              </div>
+              <div style={{ fontSize:12,color:C.secondary,lineHeight:1.7 }}>A portfolio project simulating a Tier-1 SOC dashboard with live threat intelligence, agentic AI alert triage, NIST CSF 2.0 GRC tracking, and full incident management. Built with React, Supabase Edge Functions, and the Claude API.</div>
+            </div>
+            <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:14 }}>
+              {[["Phases Live","1–2–3–4"],["Framework","NIST CSF 2.0"],["AI Model","claude-haiku-4-5"],["Backend","Supabase Edge Functions"],["Frontend","React + Tailwind CSS"],["Hosting","GitHub Pages"]].map(([k,v])=>(
+                <div key={k} style={{ padding:"8px 10px",borderRadius:6,border:`1px solid ${C.border}` }}>
+                  <div style={{ fontSize:10,color:C.subtle,marginBottom:2 }}>{k}</div>
+                  <div className="mono" style={{ fontSize:12,color:C.text }}>{v}</div>
+                </div>
+              ))}
+            </div>
+            {/* ASCII architecture */}
+            <div style={{ background:"rgba(0,0,0,0.3)",borderRadius:8,padding:12,fontFamily:"IBM Plex Mono",fontSize:11,color:C.subtle,lineHeight:1.8 }}>
+              <div style={{ color:C.cyan,marginBottom:4 }}>// Architecture</div>
+              <div>Browser (GitHub Pages)</div>
+              <div>  │</div>
+              <div>  ├─ CISA KEV API ──────────────────────┐</div>
+              <div>  │                                      ▼</div>
+              <div>  └─ AI / GRC requests ──────► <span style={{ color:C.green }}>Supabase Edge Fn</span></div>
+              <div>                                         │</div>
+              <div>                          ┌──────────────┤</div>
+              <div>                          ▼              ▼</div>
+              <div>                   <span style={{ color:C.purple }}>Anthropic Claude</span>    <span style={{ color:"#fbbf24" }}>CISA KEV Feed</span></div>
+            </div>
+          </Section>
 
           {/* Analyst Profile */}
-          <div style={{ background:C.card,border:`1px solid ${C.border}`,borderRadius:12,padding:16 }}>
-            <div className="mono" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:14 }}>Analyst Profile</div>
-            {[["Display Name",name,setName],["Role",role,setRole],["Organization",org,setOrg]].map(([label,val,setter])=>(
+          <Section title="Analyst Profile">
+            {[["Display Name",name,setName,"text"],["Role / Title",role,setRole,"text"],["Organization",org,setOrg,"text"]].map(([label,val,setter])=>(
               <div key={label} style={{ marginBottom:12 }}>
                 <div style={{ fontSize:12,color:C.subtle,marginBottom:4 }}>{label}</div>
                 <input value={val} onChange={e=>setter(e.target.value)}
                   style={{ width:"100%",background:"rgba(255,255,255,0.03)",border:`1px solid ${C.border}`,borderRadius:6,padding:"8px 12px",fontSize:13,color:C.bright,fontFamily:"DM Sans,sans-serif" }}/>
               </div>
             ))}
-            <button type="button" onClick={save} style={{ padding:"7px 18px",background:C.cyanDim,border:`1px solid rgba(34,211,238,0.3)`,borderRadius:6,color:C.cyan,fontSize:12,fontFamily:"IBM Plex Mono",cursor:"pointer" }}>
-              {saved?"Saved ✓":"Save Profile"}
+            <button type="button" onClick={save} style={{ padding:"7px 18px",background:C.cyanDim,border:`1px solid rgba(34,211,238,0.3)`,borderRadius:6,color:saved?"#4ade80":C.cyan,fontSize:12,fontFamily:"IBM Plex Mono",cursor:"pointer",transition:"color 0.2s" }}>
+              {saved?"✓ Saved":"Save Profile"}
             </button>
-          </div>
+          </Section>
 
-          {/* Feed Status */}
-          <div style={{ background:C.card,border:`1px solid ${C.border}`,borderRadius:12,padding:16 }}>
-            <div className="mono" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:14 }}>Connected Feeds</div>
+          {/* Data Sources */}
+          <Section title="Data Sources">
             {[
-              { name:"CISA Known Exploited Vulnerabilities", status:"Live",    note:"Public API — no key required"     },
-              { name:"AlienVault OTX",                       status:"Demo",    note:"Connect API key for live data"    },
-              { name:"AbuseIPDB",                            status:"Demo",    note:"Connect API key for live lookup"  },
-              { name:"VirusTotal",                           status:"Degraded",note:"API key not configured"           },
-              { name:"Anthropic Claude API",                 status:"Live",    note:"Routed via Supabase Edge Function"},
+              { key:"cisa",  name:"CISA Known Exploited Vulnerabilities", status:"Live",    note:"Public API · No key required" },
+              { key:"otx",   name:"AlienVault OTX",                       status:"Demo",    note:"Add API key for live threat pulses" },
+              { key:"abuse", name:"AbuseIPDB",                            status:"Demo",    note:"Add API key for live IP reputation" },
+              { key:"vt",    name:"VirusTotal",                           status:"Degraded",note:"API key not configured" },
             ].map(f=>{
               const c = f.status==="Live"?"#4ade80":f.status==="Demo"?"#fbbf24":"#f87171";
               return (
-                <div key={f.name} style={{ display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 0",borderBottom:`1px solid ${C.border}` }}>
+                <div key={f.key} style={{ display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 0",borderBottom:`1px solid ${C.border}` }}>
                   <div>
-                    <div style={{ fontSize:13,color:C.text }}>{f.name}</div>
-                    <div style={{ fontSize:11,color:C.subtle,marginTop:2 }}>{f.note}</div>
+                    <div style={{ fontSize:13,color:C.text,marginBottom:2 }}>{f.name}</div>
+                    <div style={{ fontSize:11,color:C.subtle }}>{f.note}</div>
                   </div>
-                  <span className="mono" style={{ fontSize:11,padding:"2px 8px",borderRadius:4,color:c,background:`${c}18`,border:`1px solid ${c}40`,flexShrink:0,marginLeft:12 }}>{f.status}</span>
+                  <div style={{ display:"flex",alignItems:"center",gap:10,flexShrink:0,marginLeft:12 }}>
+                    <span className="mono" style={{ fontSize:10,padding:"2px 7px",borderRadius:3,color:c,background:`${c}15`,border:`1px solid ${c}40` }}>{f.status}</span>
+                    <Toggle on={feedToggles[f.key]} onChange={v=>setFeedToggles(prev=>({...prev,[f.key]:v}))}/>
+                  </div>
                 </div>
               );
             })}
-          </div>
+          </Section>
+
+          {/* AI Analyst */}
+          <Section title="AI Analyst">
+            <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:14 }}>
+              {[["Model","claude-haiku-4-5"],["Route","Supabase Edge Fn"],["Status","Active"]].map(([k,v])=>(
+                <div key={k} style={{ padding:"8px 10px",borderRadius:6,border:`1px solid ${C.border}` }}>
+                  <div style={{ fontSize:10,color:C.subtle,marginBottom:2 }}>{k}</div>
+                  <div className="mono" style={{ fontSize:12,color:k==="Status"?C.green:C.text }}>{v}</div>
+                </div>
+              ))}
+            </div>
+            <button type="button" onClick={testAI} disabled={testStatus==="loading"}
+              style={{ padding:"7px 18px",background:testStatus==="ok"?C.greenDim:testStatus==="error"?"rgba(239,68,68,0.1)":C.purpleDim,border:`1px solid ${testStatus==="ok"?"rgba(74,222,128,0.4)":testStatus==="error"?"rgba(239,68,68,0.4)":"rgba(167,139,250,0.4)"}`,borderRadius:6,color:testStatus==="ok"?C.green:testStatus==="error"?"#f87171":C.purple,fontSize:12,fontFamily:"IBM Plex Mono",cursor:"pointer",transition:"all 0.2s" }}>
+              {testStatus==="loading"?"Testing...":testStatus==="ok"?"✓ Connected":testStatus==="error"?"✗ Failed":"Test Connection"}
+            </button>
+          </Section>
+
+          {/* Notifications */}
+          <Section title="Notifications">
+            <div style={{ marginBottom:14 }}>
+              <div style={{ fontSize:12,color:C.subtle,marginBottom:8 }}>Alert severity threshold</div>
+              <div style={{ display:"flex",gap:6 }}>
+                {["Critical","High","Medium","Low"].map(l=>(
+                  <button key={l} type="button" onClick={()=>setNotifLevel(l)}
+                    style={{ padding:"5px 14px",borderRadius:5,fontSize:12,fontFamily:"IBM Plex Mono",cursor:"pointer",border:`1px solid ${notifLevel===l?C.cyan:C.border}`,background:notifLevel===l?C.cyanDim:"none",color:notifLevel===l?C.cyan:C.subtle }}>{l}</button>
+                ))}
+              </div>
+            </div>
+            <div style={{ marginBottom:14 }}>
+              <div style={{ fontSize:12,color:C.subtle,marginBottom:8 }}>Notification channels</div>
+              {[["email","Email"],["slack","Slack"],["pagerduty","PagerDuty"]].map(([k,label])=>(
+                <div key={k} style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10 }}>
+                  <span style={{ fontSize:13,color:C.text }}>{label}</span>
+                  <Toggle on={channels[k]} onChange={v=>setChannels(prev=>({...prev,[k]:v}))}/>
+                </div>
+              ))}
+            </div>
+            <button type="button" onClick={saveNotif} style={{ padding:"7px 18px",background:notifSaved?C.greenDim:C.cyanDim,border:`1px solid ${notifSaved?"rgba(74,222,128,0.3)":"rgba(34,211,238,0.3)"}`,borderRadius:6,color:notifSaved?C.green:C.cyan,fontSize:12,fontFamily:"IBM Plex Mono",cursor:"pointer" }}>
+              {notifSaved?"✓ Saved":"Save Preferences"}
+            </button>
+          </Section>
+
+          {/* Display */}
+          <Section title="Display">
+            <div style={{ marginBottom:14 }}>
+              <div style={{ fontSize:12,color:C.subtle,marginBottom:8 }}>Theme</div>
+              <div style={{ display:"flex",gap:6 }}>
+                {[["navy","Dark Navy (default)"],["black","Deep Black"]].map(([k,label])=>(
+                  <button key={k} type="button" onClick={()=>setTheme(k)}
+                    style={{ padding:"5px 14px",borderRadius:5,fontSize:12,cursor:"pointer",border:`1px solid ${theme===k?C.cyan:C.border}`,background:theme===k?C.cyanDim:"none",color:theme===k?C.cyan:C.subtle }}>{label}</button>
+                ))}
+              </div>
+            </div>
+            <div style={{ marginBottom:14 }}>
+              <div style={{ fontSize:12,color:C.subtle,marginBottom:8 }}>Alert queue density</div>
+              <div style={{ display:"flex",gap:6 }}>
+                {["Compact","Comfortable","Spacious"].map(d=>(
+                  <button key={d} type="button" onClick={()=>setDensity(d.toLowerCase())}
+                    style={{ padding:"5px 14px",borderRadius:5,fontSize:12,cursor:"pointer",border:`1px solid ${density===d.toLowerCase()?C.cyan:C.border}`,background:density===d.toLowerCase()?C.cyanDim:"none",color:density===d.toLowerCase()?C.cyan:C.subtle }}>{d}</button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <div style={{ fontSize:12,color:C.subtle,marginBottom:8 }}>Clock timezone</div>
+              <select value={timezone} onChange={e=>setTimezone(e.target.value)}
+                style={{ background:C.card,border:`1px solid ${C.border}`,borderRadius:6,padding:"6px 10px",fontSize:12,color:C.text,fontFamily:"IBM Plex Mono",cursor:"pointer" }}>
+                {["UTC","EST (UTC-5)","PST (UTC-8)","BST (UTC+1)","CST (UTC+8)"].map(tz=><option key={tz} value={tz}>{tz}</option>)}
+              </select>
+            </div>
+          </Section>
 
           {/* Keyboard Shortcuts */}
-          <div style={{ background:C.card,border:`1px solid ${C.border}`,borderRadius:12,padding:16 }}>
-            <div className="mono" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:14 }}>Keyboard Shortcuts</div>
-            {[["j / ↓","Next alert in queue"],["k / ↑","Previous alert in queue"],["Escape","Deselect current alert"],["/ ","Focus the search bar"],["?","Open shortcuts overlay"]].map(([k,v])=>(
+          <Section title="Keyboard Shortcuts">
+            {[["j / ↓","Next alert"],["k / ↑","Previous alert"],["Escape","Deselect alert"],["/ ","Focus search"],["?","Shortcuts overlay"]].map(([k,v])=>(
               <div key={k} style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10 }}>
                 <span className="mono" style={{ fontSize:12,background:"rgba(255,255,255,0.06)",border:`1px solid ${C.border2}`,borderRadius:4,padding:"2px 8px",color:C.cyan }}>{k}</span>
                 <span style={{ fontSize:12,color:C.secondary }}>{v}</span>
               </div>
             ))}
-          </div>
+          </Section>
 
-          {/* Platform Info */}
-          <div style={{ background:C.card,border:`1px solid ${C.border}`,borderRadius:12,padding:16 }}>
-            <div className="mono" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:14 }}>Platform Info</div>
-            {[["Version","SentinelIQ v2.0"],["Phases","1–4 Complete"],["Stack","React · Supabase · Claude API"],["Built By","Mohamed Mohamud"],["Portfolio","mmohamud.me"],["GitHub","mmohamud25"]].map(([k,v])=>(
-              <div key={k} style={{ display:"flex",justifyContent:"space-between",padding:"7px 0",borderBottom:`1px solid ${C.border}`,fontSize:12 }}>
-                <span style={{ color:C.subtle }}>{k}</span>
-                <span className="mono" style={{ color:C.text }}>{v}</span>
-              </div>
-            ))}
-            <div style={{ marginTop:12,display:"flex",gap:8 }}>
-              <a href="https://mmohamud.me" target="_blank" style={{ padding:"6px 14px",background:C.cyanDim,border:`1px solid rgba(34,211,238,0.3)`,borderRadius:6,color:C.cyan,fontSize:12,fontFamily:"IBM Plex Mono",textDecoration:"none" }}>Portfolio</a>
-              <a href="https://github.com/mmohamud25" target="_blank" style={{ padding:"6px 14px",background:"rgba(255,255,255,0.04)",border:`1px solid ${C.border}`,borderRadius:6,color:C.secondary,fontSize:12,fontFamily:"IBM Plex Mono",textDecoration:"none" }}>GitHub</a>
-              <a href="https://linkedin.com/in/mohamed-2-mohamud" target="_blank" style={{ padding:"6px 14px",background:"rgba(255,255,255,0.04)",border:`1px solid ${C.border}`,borderRadius:6,color:C.secondary,fontSize:12,fontFamily:"IBM Plex Mono",textDecoration:"none" }}>LinkedIn</a>
+          {/* Links */}
+          <Section title="About">
+            <div style={{ display:"flex",gap:8,flexWrap:"wrap" }}>
+              {[["Portfolio","https://mmohamud.me",C.cyan,C.cyanDim],["GitHub","https://github.com/mmohamud25",C.secondary,C.card],["LinkedIn","https://linkedin.com/in/mohamed-2-mohamud",C.secondary,C.card],["Security+","https://mmohamud.me",C.secondary,C.card]].map(([label,href,color,bg])=>(
+                <a key={label} href={href} target="_blank" style={{ padding:"7px 16px",background:bg,border:`1px solid ${color}40`,borderRadius:6,color,fontSize:12,fontFamily:"IBM Plex Mono",textDecoration:"none" }}>{label}</a>
+              ))}
             </div>
-          </div>
+            <div style={{ marginTop:14,fontSize:12,color:C.subtle,lineHeight:1.7 }}>
+              Built May 2026 · Mohamed Mohamud · CompTIA Security+ · MS Business Analytics, Franklin University · Founder, Kulan Group Ltd
+            </div>
+          </Section>
 
         </div>
       );
@@ -1289,9 +1420,12 @@
 
       const filtered = activeFunc==="ALL" ? controls : controls.filter(c=>c.fn===activeFunc);
 
+      const [grcToast, setGrcToast] = useState("");
       const updateStatus = (id, newStatus) => {
         setControls(prev=>prev.map(c=>c.id===id?{...c,status:newStatus}:c));
         setSelectedCtrl(prev=>prev?.id===id?{...prev,status:newStatus}:prev);
+        setGrcToast(`${id} → ${newStatus}`);
+        setTimeout(()=>setGrcToast(""),2000);
       };
 
       const runAI = async () => {
@@ -1403,8 +1537,11 @@
 
                       {/* Status updater */}
                       <div style={{ background:C.card,border:`1px solid ${C.border}`,borderRadius:8,padding:12 }}>
-                        <div style={{ fontSize:11,color:C.subtle,marginBottom:8 }}>Update Status</div>
-                        <div style={{ display:"flex",gap:6,flexWrap:"wrap" }}>
+                        <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8 }}>
+                          <div style={{ fontSize:11,color:C.subtle }}>Update Status</div>
+                          {grcToast && <span className="mono" style={{ fontSize:10,color:C.green }}>✓ {grcToast}</span>}
+                        </div>
+                        <div style={{ display:"flex",gap:6,flexWrap:"wrap",marginBottom:6 }}>
                           {["Implemented","In Progress","Not Started","Not Applicable"].map(s=>{
                             const st = STATUS_STYLE[s];
                             const isActive = selectedCtrl.status===s;
@@ -1414,6 +1551,7 @@
                             );
                           })}
                         </div>
+                        <div style={{ fontSize:10,color:C.muted,marginTop:4 }}>Session only — changes reset on refresh</div>
                       </div>
 
                       {/* AI Guidance */}
@@ -1699,14 +1837,15 @@
             </div>
             <div style={{ fontSize:14,fontWeight:600,color:C.bright,marginBottom:10 }}>{alert.title}</div>
             {/* Triage Actions */}
-            <div style={{ display:"flex",gap:6,flexWrap:"wrap" }}>
+            <div style={{ display:"flex",gap:6,flexWrap:"wrap",alignItems:"center" }}>
               {["Escalate","Investigate","Close","Assign"].map(action=>(
                 <button key={action} type="button" onClick={()=>onTriage(action,alert)} style={{ padding:"4px 10px",fontSize:11,fontFamily:"IBM Plex Mono",borderRadius:4,cursor:"pointer",border:`1px solid ${C.border2}`,background:"rgba(255,255,255,0.04)",color:C.secondary,transition:"all 0.15s" }}
                   onMouseEnter={e=>{ e.currentTarget.style.background=C.cyanDim; e.currentTarget.style.color=C.cyan; e.currentTarget.style.borderColor="rgba(34,211,238,0.3)"; }}
                   onMouseLeave={e=>{ e.currentTarget.style.background="rgba(255,255,255,0.04)"; e.currentTarget.style.color=C.secondary; e.currentTarget.style.borderColor=C.border2; }}
                 >{action}</button>
               ))}
-              <button type="button" onClick={()=>onCreateIncident&&onCreateIncident(alert)} style={{ padding:"4px 10px",fontSize:11,fontFamily:"IBM Plex Mono",borderRadius:4,cursor:"pointer",border:`1px solid rgba(167,139,250,0.4)`,background:C.purpleDim,color:C.purple,transition:"all 0.15s",marginLeft:"auto" }}>+ Incident</button>
+              <div style={{ width:1,height:16,background:C.border,margin:"0 2px" }}/>
+              <button type="button" onClick={()=>onCreateIncident&&onCreateIncident(alert)} style={{ padding:"4px 10px",fontSize:11,fontFamily:"IBM Plex Mono",borderRadius:4,cursor:"pointer",border:`1px solid rgba(167,139,250,0.4)`,background:C.purpleDim,color:C.purple }}>+ Incident</button>
             </div>
           </div>
           {/* Metadata */}
@@ -1877,15 +2016,13 @@
       const threatColor = { CRITICAL:"#dc2626", HIGH:"#f97316", MEDIUM:"#fbbf24", LOW:"#4ade80" }[threatLevel];
 
       const stats = [
-        { label:"Total Alerts", value:alerts.length, sub:"Last 24h",        filterKey:null },
+        { label:"Total Alerts", value:alerts.length, sub:"Last 24h",        filterKey:null     },
         { label:"Critical",     value:critical,       sub:"Immediate action", filterKey:"Critical" },
-        { label:"High",         value:high,           sub:"Needs review",    filterKey:"High" },
-        { label:"Open",         value:open,           sub:"Unresolved",      filterKey:"Open" },
+        { label:"High",         value:high,           sub:"Needs review",    filterKey:"High"   },
+        { label:"Open",         value:open,           sub:"Unresolved",      filterKey:"Open"   },
       ];
 
       const HEADER_H = 49;
-      const STATS_H  = 80;
-      const CONTENT_H = `calc(100vh - ${HEADER_H}px - ${STATS_H}px)`;
 
       const ShortcutsModal = () => {
         useEffect(()=>{
@@ -1931,7 +2068,8 @@
                 </div>
               ))}
               <div style={{ display:"flex",alignItems:"center",gap:5,flexShrink:0 }}>
-                <Dot live={true} tip="AI Analyst active"/><span className="feed-label" style={{ fontSize:11,color:C.green }}>AI Analyst</span>
+                <Dot live={true} tip="AI Analyst active via Supabase"/>
+                <span className="feed-label" style={{ fontSize:11,color:C.green }}>AI Analyst</span>
               </div>
             </div>
             <div style={{ display:"flex",alignItems:"center",gap:10,flexShrink:0 }}>
@@ -1941,7 +2079,8 @@
             </div>
           </header>
 
-          {/* Stats Bar */}
+          {/* Stats Bar — only on Alert Queue tab */}
+          {sideTab==="alerts" && (
           <div style={{ height:STATS_H,padding:"10px 16px 10px 8px",display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8,borderBottom:`1px solid ${C.border}`,flexShrink:0 }}>
             {stats.map(s=>{
               const sc = STAT_COLORS[s.label] || { c:C.bright, bg:C.card };
@@ -1951,13 +2090,15 @@
                   style={{ background:isActive?`${sc.bg}`:C.card,border:`1px solid ${isActive?C.border2:C.border}`,borderRadius:8,padding:"8px 12px",cursor:s.filterKey?"pointer":"default",transition:"all 0.15s",textAlign:"left",outline:"none" }}>
                   <div className="mono" style={{ fontSize:22,fontWeight:700,color:sc.c,marginBottom:2 }}>{s.value}</div>
                   <div style={{ fontSize:11,color:C.secondary,textTransform:"uppercase",letterSpacing:"0.06em",fontFamily:"IBM Plex Mono" }}>{s.label}</div>
+                  <div style={{ fontSize:10,color:C.muted,marginTop:2 }}>{s.sub}</div>
                 </button>
               );
             })}
           </div>
+          )}
 
           {/* Main Layout */}
-          <div style={{ flex:1,display:"flex",overflow:"hidden",height:CONTENT_H }}>
+          <div style={{ flex:1,display:"flex",overflow:"hidden" }}>
 
             {/* Sidebar */}
             <Sidebar active={sideTab} onChange={setSideTab}/>
@@ -2036,7 +2177,7 @@
                     const target = alerts.find(al=>al.id===a.id);
                     return (
                       <button key={i} type="button"
-                        onClick={()=>{ if(target){ setSel(target); setSideTab("dashboard"); } }}
+                        onClick={()=>{ if(target){ setSel(target); setSideTab("alerts"); } }}
                         style={{ width:"100%",textAlign:"left",display:"flex",alignItems:"flex-start",gap:8,marginBottom:8,paddingBottom:8,borderBottom:i<activity.length-1?`1px solid ${C.border}`:"none",background:"none",border:"none",cursor:target?"pointer":"default",borderRadius:4,padding:"6px 4px",transition:"background 0.15s" }}
                         onMouseEnter={e=>{ if(target) e.currentTarget.style.background=C.card; }}
                         onMouseLeave={e=>{ e.currentTarget.style.background="none"; }}
