@@ -13,6 +13,7 @@
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="SentinelIQ — AI-Powered SOC Platform" />
   <meta name="twitter:description" content="Portfolio project by Mohamed Mohamud. Live threat intel, AI analyst, MITRE ATT&CK mapping." />
+  <meta name="robots" content="noindex" />
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12 2L3 7v5c0 5.25 3.75 10.15 9 11.25C17.25 22.15 21 17.25 21 12V7L12 2z' fill='%2300D4FF' opacity='0.9'/><path d='M9 12l2 2 4-4' stroke='white' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' fill='none'/></svg>" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
@@ -44,6 +45,14 @@
     .sidebar-btn .tip { left:calc(100% + 8px); bottom:auto; top:50%; transform:translateY(-50%); }
     .sidebar-btn:hover .tip { display:block; }
     .mono { font-family:'IBM Plex Mono',monospace; }
+    .alert-row-focused { outline: 2px solid rgba(34,211,238,0.5) !important; }
+    @keyframes slideIn { from { opacity:0; transform:translateX(20px); } to { opacity:1; transform:translateX(0); } }
+    .toast-anim { animation: slideIn 0.2s ease forwards; }
+    @media (max-width: 768px) {
+      .header-feeds { display:none !important; }
+      .header-clock { display:none !important; }
+      .header-title-sub { display:none !important; }
+    }
   </style>
 </head>
 <body>
@@ -411,7 +420,7 @@
             </div>
             <div style={{ fontSize:14,fontWeight:600,color:C.bright,marginBottom:10 }}>{alert.title}</div>
             {/* Triage Actions */}
-            <div style={{ display:"flex",gap:6 }}>
+            <div style={{ display:"flex",gap:6,flexWrap:"wrap" }}>
               {["Escalate","Investigate","Close","Assign"].map(action=>(
                 <button key={action} type="button" onClick={()=>onTriage(action,alert)} style={{ padding:"4px 10px",fontSize:11,fontFamily:"IBM Plex Mono",borderRadius:4,cursor:"pointer",border:`1px solid ${C.border2}`,background:"rgba(255,255,255,0.04)",color:C.secondary,transition:"all 0.15s" }}
                   onMouseEnter={e=>{ e.currentTarget.style.background=C.cyanDim; e.currentTarget.style.color=C.cyan; e.currentTarget.style.borderColor="rgba(34,211,238,0.3)"; }}
@@ -510,12 +519,42 @@
       const [time,      setTime]      = useState(new Date());
       const [sideTab,   setSideTab]   = useState("dashboard");
       const [showAbout, setShowAbout] = useState(false);
+      const [showKeys,  setShowKeys]  = useState(false);
       const [search,    setSearch]    = useState("");
-      const [filter,    setFilter]    = useState(null); // null | "CRITICAL" | "HIGH" | "Open"
+      const [filter,    setFilter]    = useState(null);
       const [toast,     setToast]     = useState(null);
       const [alerts,    setAlerts]    = useState(ALERTS_RAW);
+      const [activity]              = useState([
+        { id:"ALT-002", msg:"moved to Investigating", offsetMs:8*60*1000  },
+        { id:"ALT-001", msg:"AI analysis completed",  offsetMs:11*60*1000 },
+        { id:"ALT-005", msg:"moved to Investigating", offsetMs:31*60*1000 },
+        { id:"ALT-003", msg:"flagged by EDR sensor",  offsetMs:15*60*1000 },
+        { id:"ALT-004", msg:"brute force threshold",  offsetMs:22*60*1000 },
+      ]);
+      const searchRef = useRef(null);
 
       useEffect(()=>{ const t=setInterval(()=>setTime(new Date()),1000); return()=>clearInterval(t); },[]);
+
+      // Keyboard shortcuts
+      useEffect(()=>{
+        const handler = (e) => {
+          const tag = document.activeElement?.tagName;
+          if (tag==="INPUT" || tag==="TEXTAREA") return;
+          const visible = alerts.filter(a => {
+            const ms = !search || a.title.toLowerCase().includes(search.toLowerCase()) || a.asset.toLowerCase().includes(search.toLowerCase());
+            const mf = !filter || (filter==="Open" ? a.status==="Open" : a.severity===filter);
+            return ms && mf;
+          });
+          const idx = visible.findIndex(a=>a.id===sel?.id);
+          if (e.key==="j" || e.key==="ArrowDown") { e.preventDefault(); if(idx<visible.length-1) setSel(visible[idx+1]); }
+          if (e.key==="k" || e.key==="ArrowUp")   { e.preventDefault(); if(idx>0) setSel(visible[idx-1]); }
+          if (e.key==="Escape") setSel(null);
+          if (e.key==="/") { e.preventDefault(); searchRef.current?.focus(); }
+          if (e.key==="?") setShowKeys(s=>!s);
+        };
+        window.addEventListener("keydown", handler);
+        return()=>window.removeEventListener("keydown",handler);
+      },[sel, alerts, search, filter]);
       useEffect(()=>{
         fetch(`${SUPABASE_URL}?action=cisa`,{ headers:sbHeaders() })
           .then(r=>r.json())
@@ -527,13 +566,13 @@
         if (action === "Investigate") {
           setAlerts(prev => prev.map(a => a.id===alert.id ? {...a, status:"Investigating"} : a));
           setSel(prev => prev?.id===alert.id ? {...prev, status:"Investigating"} : prev);
-          setToast(`ALT-${alert.id.slice(-3)} status → Investigating`);
+          setToast(`${alert.id} → Investigating`);
         } else if (action === "Close") {
           setAlerts(prev => prev.map(a => a.id===alert.id ? {...a, status:"Closed"} : a));
           setSel(prev => prev?.id===alert.id ? {...prev, status:"Closed"} : prev);
-          setToast(`ALT-${alert.id.slice(-3)} closed`);
+          setToast(`${alert.id} closed`);
         } else {
-          setToast(`${action} — coming in Phase 4`);
+          setToast(`${alert.id} — ${action} coming in Phase 4`);
         }
       };
 
@@ -550,9 +589,12 @@
         return matchSearch && matchFilter;
       });
 
-      const critical = alerts.filter(a=>a.severity==="CRITICAL").length;
-      const high     = alerts.filter(a=>a.severity==="HIGH").length;
+      const critical = alerts.filter(a=>a.severity==="CRITICAL" && a.status!=="Closed").length;
+      const high     = alerts.filter(a=>a.severity==="HIGH" && a.status!=="Closed").length;
       const open     = alerts.filter(a=>a.status==="Open").length;
+
+      const threatLevel = critical > 0 ? "CRITICAL" : high >= 2 ? "HIGH" : high === 1 ? "MEDIUM" : "LOW";
+      const threatColor = { CRITICAL:"#dc2626", HIGH:"#f97316", MEDIUM:"#fbbf24", LOW:"#4ade80" }[threatLevel];
 
       const stats = [
         { label:"Total Alerts", value:alerts.length, sub:"Last 24h",        filterKey:null },
@@ -565,19 +607,36 @@
       const STATS_H  = 80;
       const CONTENT_H = `calc(100vh - ${HEADER_H}px - ${STATS_H}px)`;
 
+      const ShortcutsModal = () => (
+        <div onClick={()=>setShowKeys(false)} style={{ position:"fixed",inset:0,background:"rgba(0,0,0,0.7)",zIndex:200,display:"flex",alignItems:"center",justifyContent:"center" }}>
+          <div onClick={e=>e.stopPropagation()} style={{ background:C.surface,border:`1px solid ${C.border2}`,borderRadius:12,padding:24,minWidth:320,boxShadow:"0 24px 64px rgba(0,0,0,0.5)" }}>
+            <div className="mono" style={{ fontSize:13,color:C.cyan,marginBottom:16,letterSpacing:"0.1em" }}>KEYBOARD SHORTCUTS</div>
+            {[["j / ↓","Next alert"],["k / ↑","Previous alert"],["Escape","Deselect alert"],["/ ","Focus search"],["?","Toggle this overlay"]].map(([k,v])=>(
+              <div key={k} style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10 }}>
+                <span className="mono" style={{ fontSize:12,background:C.card,border:`1px solid ${C.border2}`,borderRadius:4,padding:"2px 8px",color:C.cyan }}>{k}</span>
+                <span style={{ fontSize:12,color:C.secondary }}>{v}</span>
+              </div>
+            ))}
+            <div style={{ marginTop:14,fontSize:11,color:C.muted,textAlign:"center" }}>Press ? or click outside to close</div>
+          </div>
+        </div>
+      );
+
       return (
         <div style={{ height:"100vh",overflow:"hidden",background:C.bg,color:C.text,display:"flex",flexDirection:"column",backgroundImage:"radial-gradient(ellipse at top left,rgba(0,180,255,0.04) 0%,transparent 50%),radial-gradient(ellipse at bottom right,rgba(167,139,250,0.03) 0%,transparent 50%)" }}>
 
           {showAbout && <AboutModal onClose={()=>setShowAbout(false)}/>}
+          {showKeys  && <ShortcutsModal/>}
           {toast && <Toast msg={toast} onClose={()=>setToast(null)}/>}
 
           {/* Header */}
           <header style={{ height:HEADER_H,borderBottom:`1px solid ${C.border}`,padding:"0 20px",display:"flex",alignItems:"center",justifyContent:"space-between",background:"rgba(8,13,20,0.9)",backdropFilter:"blur(8px)",flexShrink:0,zIndex:50,gap:12 }}>
             <div style={{ display:"flex",alignItems:"center",gap:12,flexShrink:0 }}>
               <span className="mono" style={{ fontSize:14,fontWeight:700,letterSpacing:"0.08em",color:C.cyan,whiteSpace:"nowrap" }}>SENTINEL<span style={{ color:C.bright }}>IQ</span></span>
-              <span style={{ fontSize:11,color:C.muted,whiteSpace:"nowrap" }}>SOC Platform v2.0</span>
+              <span className="header-title-sub" style={{ fontSize:11,color:C.muted,whiteSpace:"nowrap" }}>SOC Platform v2.0</span>
+              <span style={{ fontSize:11,fontFamily:"IBM Plex Mono",padding:"2px 8px",borderRadius:4,background:`${threatColor}18`,border:`1px solid ${threatColor}40`,color:threatColor,whiteSpace:"nowrap" }}>● {threatLevel}</span>
             </div>
-            <div style={{ display:"flex",alignItems:"center",gap:12,overflow:"hidden",flexWrap:"nowrap" }}>
+            <div className="header-feeds" style={{ display:"flex",alignItems:"center",gap:12,overflow:"hidden",flexWrap:"nowrap" }}>
               {FEEDS.map(f=>(
                 <div key={f.name} style={{ display:"flex",alignItems:"center",gap:5,flexShrink:0 }}>
                   <Dot live={f.live} tip={f.tip}/>
@@ -589,7 +648,8 @@
               </div>
             </div>
             <div style={{ display:"flex",alignItems:"center",gap:10,flexShrink:0 }}>
-              <span className="mono" style={{ fontSize:11,color:C.muted,whiteSpace:"nowrap" }}>{time.toUTCString().slice(0,-4)} UTC</span>
+              <span className="header-clock mono" style={{ fontSize:11,color:C.muted,whiteSpace:"nowrap" }}>{time.toUTCString().slice(0,-4)} UTC</span>
+              <button type="button" onClick={()=>setShowKeys(true)} title="Keyboard shortcuts (?)" style={{ background:"none",border:`1px solid ${C.border}`,borderRadius:4,color:C.subtle,fontSize:11,padding:"2px 6px",cursor:"pointer",fontFamily:"IBM Plex Mono" }}>?</button>
               <AvatarMenu onAbout={()=>setShowAbout(true)}/>
             </div>
           </header>
@@ -640,7 +700,7 @@
               <div style={{ padding:"8px 12px",borderBottom:`1px solid ${C.border}`,flexShrink:0 }}>
                 <div style={{ position:"relative" }}>
                   <svg style={{ position:"absolute",left:8,top:"50%",transform:"translateY(-50%)",pointerEvents:"none" }} width="12" height="12" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="8" stroke={C.subtle} strokeWidth="2"/><path d="M21 21l-4.35-4.35" stroke={C.subtle} strokeWidth="2" strokeLinecap="round"/></svg>
-                  <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search alerts..."
+                  <input ref={searchRef} value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search alerts..."
                     aria-label="Search alerts"
                     style={{ width:"100%",background:C.card,border:`1px solid ${C.border}`,borderRadius:5,padding:"5px 8px 5px 24px",fontSize:12,color:C.bright,fontFamily:"DM Sans,sans-serif",transition:"border 0.15s,box-shadow 0.15s" }}/>
                 </div>
@@ -678,7 +738,19 @@
               <div style={{ flex:1,overflowY:"auto",padding:14 }}>
                 <IOCLookup/>
                 <div style={{ marginTop:22 }}>
-                  <div className="mono" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:12 }}>MITRE ATT&CK Activity</div>
+                  <div className="mono" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:12 }}>Activity Feed</div>
+                  {activity.map((a,i)=>(
+                    <div key={i} style={{ display:"flex",alignItems:"flex-start",gap:8,marginBottom:10,paddingBottom:10,borderBottom:i<activity.length-1?`1px solid ${C.border}`:"none" }}>
+                      <span className="mono" style={{ fontSize:10,color:C.cyan,flexShrink:0,marginTop:1,width:64 }}>{a.id}</span>
+                      <div style={{ flex:1 }}>
+                        <div style={{ fontSize:12,color:C.text }}>{a.msg}</div>
+                        <div className="mono" style={{ fontSize:10,color:C.subtle,marginTop:2 }}>{timeAgo(a.offsetMs)}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div style={{ marginTop:16 }}>
+                  <div className="mono" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:12 }}>MITRE ATT&CK</div>
                   {MITRE.map(({tactic,count,color})=>(
                     <div key={tactic} style={{ marginBottom:10 }}>
                       <div style={{ display:"flex",justifyContent:"space-between",fontSize:12,marginBottom:4 }}>
