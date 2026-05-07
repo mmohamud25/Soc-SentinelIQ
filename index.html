@@ -255,7 +255,7 @@
       const items = [
         { id:"dashboard", tip:"Dashboard", icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M9 22V12h6v10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg> },
         { id:"alerts",    tip:"Alerts",    icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg> },
-        { id:"hunt",      tip:"Threat Hunt",icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="1.5"/><path d="M21 21l-4.35-4.35" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg> },
+        { id:"incidents", tip:"Incidents",  icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M14 2v6h6M12 18v-6M9 15h6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg> },
         { id:"grc",      tip:"GRC Tracker",icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.25C17.25 22.15 21 17.25 21 12V7L12 2z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M9 12l2 2 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg> },
         { id:"settings",  tip:"Settings",  icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.5"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" stroke="currentColor" strokeWidth="1.5"/></svg> },
       ];
@@ -270,6 +270,406 @@
               <span className="tip">{item.tip}</span>
             </button>
           ))}
+        </div>
+      );
+    }
+
+    // ── Incident Management Data ──────────────────────────────────────────────
+    const INC_STATUSES = ["New","Investigating","Contained","Eradicated","Recovered","Closed"];
+    const INC_STATUS_COLOR = {
+      New:          { c:"#f87171", bg:"rgba(239,68,68,0.1)",    b:"rgba(239,68,68,0.3)"   },
+      Investigating:{ c:"#fbbf24", bg:"rgba(234,179,8,0.1)",   b:"rgba(234,179,8,0.3)"   },
+      Contained:    { c:"#fb923c", bg:"rgba(249,115,22,0.1)",  b:"rgba(249,115,22,0.3)"  },
+      Eradicated:   { c:"#a78bfa", bg:"rgba(167,139,250,0.1)", b:"rgba(167,139,250,0.3)" },
+      Recovered:    { c:"#22d3ee", bg:"rgba(34,211,238,0.1)",  b:"rgba(34,211,238,0.3)"  },
+      Closed:       { c:"#4ade80", bg:"rgba(74,222,128,0.1)",  b:"rgba(74,222,128,0.3)"  },
+    };
+
+    const INCIDENTS_RAW = [
+      {
+        id:"INC-001", alertId:"ALT-001", title:"Ransomware C2 Beacon — WS-FINANCE-04",
+        severity:"CRITICAL", status:"Investigating", assignee:"M. Mohamud",
+        tactic:"Command & Control", technique:"T1071.001",
+        assets:["WS-FINANCE-04"], iocs:["185.220.101.45"],
+        createdMs:2*60*1000, updatedMs:8*60*1000, detectedMs:2*60*1000,
+        notes:"Endpoint isolated from network. Memory dump initiated. Awaiting forensic analysis from IR team.",
+        timeline:[
+          { actorMs:2*60*1000,  actor:"System",     action:"Incident created from ALT-001 — CRITICAL alert triggered" },
+          { actorMs:3*60*1000,  actor:"Auto",       action:"Endpoint WS-FINANCE-04 isolated via EDR" },
+          { actorMs:5*60*1000,  actor:"M. Mohamud", action:"Initial triage completed — confirmed C2 beacon to Tor exit node" },
+          { actorMs:8*60*1000,  actor:"M. Mohamud", action:"Memory dump initiated, forensic image queued" },
+          { actorMs:10*60*1000, actor:"System",     action:"IOC 185.220.101.45 added to block list" },
+        ]
+      },
+      {
+        id:"INC-002", alertId:"ALT-002", title:"Lateral Movement via Pass-the-Hash — DC-PROD-01",
+        severity:"HIGH", status:"Investigating", assignee:"M. Mohamud",
+        tactic:"Lateral Movement", technique:"T1550.002",
+        assets:["WS-HR-11","DC-PROD-01"], iocs:["10.0.1.45"],
+        createdMs:8*60*1000, updatedMs:15*60*1000, detectedMs:8*60*1000,
+        notes:"Admin account credentials suspected compromised. Password reset initiated. Reviewing AD logs for further lateral movement.",
+        timeline:[
+          { actorMs:8*60*1000,  actor:"System",     action:"Incident created from ALT-002 — SIEM correlation rule triggered" },
+          { actorMs:9*60*1000,  actor:"M. Mohamud", action:"AD audit logs pulled for review" },
+          { actorMs:12*60*1000, actor:"M. Mohamud", action:"Admin account password reset — access revoked pending investigation" },
+          { actorMs:15*60*1000, actor:"System",     action:"Alert escalated to Tier 2 analyst" },
+        ]
+      },
+      {
+        id:"INC-003", alertId:"ALT-003", title:"Malicious PowerShell via Word Macro — WS-HR-11",
+        severity:"HIGH", status:"Contained", assignee:"M. Mohamud",
+        tactic:"Execution", technique:"T1059.001",
+        assets:["WS-HR-11"], iocs:["10.0.1.22"],
+        createdMs:15*60*1000, updatedMs:25*60*1000, detectedMs:15*60*1000,
+        notes:"Macro blocked by EDR before payload executed. User re-imaged as precaution. Phishing email removed from mailboxes.",
+        timeline:[
+          { actorMs:15*60*1000, actor:"System",     action:"Incident created from ALT-003 — EDR PowerShell block triggered" },
+          { actorMs:16*60*1000, actor:"Auto",       action:"Malicious Word document quarantined automatically" },
+          { actorMs:18*60*1000, actor:"M. Mohamud", action:"Confirmed phishing origin — email headers traced to external sender" },
+          { actorMs:22*60*1000, actor:"M. Mohamud", action:"Phishing email removed from all mailboxes via admin purge" },
+          { actorMs:25*60*1000, actor:"M. Mohamud", action:"WS-HR-11 re-imaged — incident contained" },
+        ]
+      },
+      {
+        id:"INC-004", alertId:"ALT-005", title:"Data Exfiltration Attempt — WS-DEVOPS-02",
+        severity:"MEDIUM", status:"Eradicated", assignee:"M. Mohamud",
+        tactic:"Exfiltration", technique:"T1048.002",
+        assets:["WS-DEVOPS-02"], iocs:["185.220.101.45"],
+        createdMs:31*60*1000, updatedMs:45*60*1000, detectedMs:31*60*1000,
+        notes:"2.3GB transfer blocked retroactively. Source process identified as rclone.exe installed without authorization. User interviewed.",
+        timeline:[
+          { actorMs:31*60*1000, actor:"System",     action:"Incident created from ALT-005 — firewall anomaly detected" },
+          { actorMs:33*60*1000, actor:"M. Mohamud", action:"Identified rclone.exe as exfil tool — unauthorized install confirmed" },
+          { actorMs:38*60*1000, actor:"M. Mohamud", action:"Destination IP 185.220.101.45 blocked at perimeter firewall" },
+          { actorMs:42*60*1000, actor:"M. Mohamud", action:"User interviewed — no malicious intent confirmed, policy violation" },
+          { actorMs:45*60*1000, actor:"M. Mohamud", action:"rclone.exe removed, DLP policy updated — incident eradicated" },
+        ]
+      },
+      {
+        id:"INC-005", alertId:"ALT-004", title:"SSH Brute Force Against VPN Gateway",
+        severity:"MEDIUM", status:"Closed", assignee:"M. Mohamud",
+        tactic:"Credential Access", technique:"T1110.001",
+        assets:["VPN-GW-01"], iocs:["45.33.32.156"],
+        createdMs:22*60*1000, updatedMs:35*60*1000, detectedMs:22*60*1000,
+        notes:"Source IP blocked. No successful authentication. Rate limiting and geo-blocking enabled on VPN gateway.",
+        timeline:[
+          { actorMs:22*60*1000, actor:"System",     action:"Incident created from ALT-004 — brute force threshold exceeded" },
+          { actorMs:23*60*1000, actor:"Auto",       action:"Source IP 45.33.32.156 temporarily rate-limited by WAF" },
+          { actorMs:26*60*1000, actor:"M. Mohamud", action:"Confirmed no successful authentication in auth logs" },
+          { actorMs:30*60*1000, actor:"M. Mohamud", action:"IP 45.33.32.156 added to permanent block list" },
+          { actorMs:33*60*1000, actor:"M. Mohamud", action:"Geo-blocking rule enabled for high-risk regions on VPN-GW-01" },
+          { actorMs:35*60*1000, actor:"M. Mohamud", action:"Incident closed — no breach, controls validated" },
+        ]
+      },
+    ];
+
+    // ── Incident Management Dashboard ─────────────────────────────────────────
+    function IncidentDashboard({ onCreateFromAlert, onSelectAlert }) {
+      const [incidents,    setIncidents]    = useState(INCIDENTS_RAW);
+      const [selInc,       setSelInc]       = useState(INCIDENTS_RAW[0]);
+      const [search,       setSearch]       = useState("");
+      const [filterStatus, setFilterStatus] = useState("ALL");
+      const [aiStatus,     setAiStatus]     = useState("idle");
+      const [aiOutput,     setAiOutput]     = useState("");
+
+      useEffect(()=>{ setAiStatus("idle"); setAiOutput(""); },[selInc?.id]);
+
+      const updateStatus = (id, newStatus) => {
+        setIncidents(prev=>prev.map(i=>i.id===id?{...i,status:newStatus,updatedMs:(Date.now()-PAGE_LOAD)}:i));
+        setSelInc(prev=>prev?.id===id?{...prev,status:newStatus}:prev);
+      };
+
+      const addNote = (id, note) => {
+        if (!note.trim()) return;
+        const newEntry = { actorMs:Date.now()-PAGE_LOAD, actor:"M. Mohamud", action:note };
+        setIncidents(prev=>prev.map(i=>i.id===id?{...i,timeline:[...i.timeline,newEntry],updatedMs:Date.now()-PAGE_LOAD}:i));
+        setSelInc(prev=>prev?.id===id?{...prev,timeline:[...prev.timeline,newEntry]}:prev);
+      };
+
+      const runAI = async () => {
+        if (!selInc) return;
+        setAiStatus("loading"); setAiOutput("");
+        try {
+          const res = await fetch(SUPABASE_URL, {
+            method:"POST", headers:sbHeaders(),
+            body:JSON.stringify({ incidentSummary: selInc }),
+          });
+          const data = await res.json();
+          if (!res.ok || data.error) throw new Error(data.error||"Edge function error");
+          setAiOutput(data.summary || "Summary generated.");
+          setAiStatus("done");
+        } catch(e) { setAiOutput(e.message); setAiStatus("error"); }
+      };
+
+      const filtered = incidents.filter(i=>{
+        const ms = !search || i.title.toLowerCase().includes(search.toLowerCase()) || i.id.toLowerCase().includes(search.toLowerCase());
+        const mf = filterStatus==="ALL" || i.status===filterStatus;
+        return ms && mf;
+      });
+
+      // Metrics
+      const open    = incidents.filter(i=>i.status!=="Closed").length;
+      const closed  = incidents.filter(i=>i.status==="Closed").length;
+      const avgMTTD = Math.round(incidents.reduce((s,i)=>s+(i.detectedMs/60000),0)/incidents.length);
+      const avgMTTR = Math.round(incidents.filter(i=>i.status==="Closed").reduce((s,i)=>s+((i.updatedMs-i.createdMs)/60000),0) / (closed||1));
+
+      return (
+        <div style={{ display:"flex",flexDirection:"column",height:"100%",overflow:"hidden" }}>
+
+          {/* Metrics bar */}
+          <div style={{ padding:"10px 16px",borderBottom:`1px solid ${C.border}`,display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8,flexShrink:0 }}>
+            {[
+              { label:"Total",      value:incidents.length, color:C.bright },
+              { label:"Open",       value:open,             color:"#f87171" },
+              { label:"Avg MTTD",   value:`${avgMTTD}m`,    color:"#fbbf24" },
+              { label:"Avg MTTR",   value:`${avgMTTR}m`,    color:C.cyan   },
+            ].map(s=>(
+              <div key={s.label} style={{ background:C.card,border:`1px solid ${C.border}`,borderRadius:8,padding:"8px 12px" }}>
+                <div className="mono" style={{ fontSize:20,fontWeight:700,color:s.color }}>{s.value}</div>
+                <div style={{ fontSize:11,color:C.subtle,marginTop:2 }}>{s.label}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* 3-col */}
+          <div style={{ flex:1,display:"grid",gridTemplateColumns:"260px 1fr 260px",overflow:"hidden" }}>
+
+            {/* Left: Incident list */}
+            <div style={{ borderRight:`1px solid ${C.border}`,display:"flex",flexDirection:"column",overflow:"hidden" }}>
+              <div style={{ padding:"8px",borderBottom:`1px solid ${C.border}`,flexShrink:0,display:"flex",flexDirection:"column",gap:6 }}>
+                <div style={{ position:"relative" }}>
+                  <svg style={{ position:"absolute",left:8,top:"50%",transform:"translateY(-50%)",pointerEvents:"none" }} width="12" height="12" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="8" stroke={C.subtle} strokeWidth="2"/><path d="M21 21l-4.35-4.35" stroke={C.subtle} strokeWidth="2" strokeLinecap="round"/></svg>
+                  <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search incidents..."
+                    style={{ width:"100%",background:C.card,border:`1px solid ${C.border}`,borderRadius:5,padding:"5px 8px 5px 24px",fontSize:12,color:C.bright,fontFamily:"DM Sans,sans-serif" }}/>
+                </div>
+                <div style={{ display:"flex",gap:4,flexWrap:"wrap" }}>
+                  {["ALL",...INC_STATUSES].map(s=>{
+                    const sc = INC_STATUS_COLOR[s];
+                    const isActive = filterStatus===s;
+                    return (
+                      <button key={s} type="button" onClick={()=>setFilterStatus(s)}
+                        style={{ fontSize:10,padding:"2px 7px",borderRadius:3,fontFamily:"IBM Plex Mono",cursor:"pointer",border:`1px solid ${isActive?(sc?.b||C.cyan):C.border}`,background:isActive?(sc?.bg||C.cyanDim):"none",color:isActive?(sc?.c||C.cyan):C.subtle }}>{s==="ALL"?"ALL":s.slice(0,4).toUpperCase()}</button>
+                    );
+                  })}
+                </div>
+              </div>
+              <div style={{ flex:1,overflowY:"auto",padding:8 }}>
+                {filtered.map(inc=>{
+                  const ss  = INC_STATUS_COLOR[inc.status] || INC_STATUS_COLOR.New;
+                  const sev = SEV[inc.severity] || SEV.LOW;
+                  const isSel = selInc?.id===inc.id;
+                  return (
+                    <button key={inc.id} type="button" onClick={()=>setSelInc(inc)}
+                      style={{ width:"100%",textAlign:"left",padding:"9px 10px",borderRadius:6,marginBottom:4,cursor:"pointer",border:`1px solid ${isSel?ss.b:C.border}`,borderLeft:`3px solid ${isSel?sev.dot:"transparent"}`,background:isSel?C.card:"rgba(255,255,255,0.01)",transition:"all 0.15s" }}>
+                      <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:3 }}>
+                        <span className="mono" style={{ fontSize:10,color:C.subtle }}>{inc.id}</span>
+                        <span className="mono" style={{ fontSize:10,padding:"1px 5px",borderRadius:3,color:ss.c,background:ss.bg,border:`1px solid ${ss.b}` }}>{inc.status}</span>
+                      </div>
+                      <div style={{ fontSize:12,color:C.text,lineHeight:1.3,marginBottom:3,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap" }}>{inc.title}</div>
+                      <div style={{ display:"flex",gap:8,fontSize:11,color:C.subtle }}>
+                        <span style={{ color:sev.text }}>{inc.severity}</span>
+                        <span>·</span>
+                        <span>{inc.assignee}</span>
+                        <span>·</span>
+                        <span className="mono">{timeAgo(inc.createdMs)}</span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Center: Incident detail + timeline */}
+            {selInc && (()=>{
+              const ss  = INC_STATUS_COLOR[selInc.status] || INC_STATUS_COLOR.New;
+              const sev = SEV[selInc.severity] || SEV.LOW;
+              const [noteVal, setNoteVal] = useState("");
+              const curIdx = INC_STATUSES.indexOf(selInc.status);
+              return (
+                <div style={{ display:"flex",flexDirection:"column",overflow:"hidden" }}>
+                  <div style={{ flex:1,overflowY:"auto",padding:16 }}>
+
+                    {/* Header */}
+                    <div style={{ borderRadius:8,border:`1px solid ${ss.b}`,background:ss.bg,padding:14,marginBottom:12 }}>
+                      <div style={{ display:"flex",alignItems:"center",gap:8,marginBottom:6 }}>
+                        <span className="mono" style={{ fontSize:11,fontWeight:700,color:sev.text }}>{selInc.severity}</span>
+                        <span className="mono" style={{ fontSize:11,color:C.subtle }}>{selInc.id}</span>
+                        <span style={{ marginLeft:"auto",fontSize:11,fontFamily:"IBM Plex Mono",padding:"2px 8px",borderRadius:4,color:ss.c,background:ss.bg,border:`1px solid ${ss.b}` }}>{selInc.status}</span>
+                      </div>
+                      <div style={{ fontSize:15,fontWeight:600,color:C.bright,marginBottom:10 }}>{selInc.title}</div>
+                      <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:10 }}>
+                        {[["Assignee",selInc.assignee],["Tactic",selInc.tactic],["Technique",selInc.technique],["Alert ID",selInc.alertId],["Assets",selInc.assets.join(", ")],["IOCs",selInc.iocs.join(", ")]].map(([k,v])=>(
+                          <div key={k} style={{ background:"rgba(0,0,0,0.2)",borderRadius:5,padding:"6px 8px" }}>
+                            <div style={{ fontSize:10,color:C.subtle }}>{k}</div>
+                            <div className="mono" style={{ fontSize:11,color:C.text,marginTop:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap" }} title={v}>{v}</div>
+                          </div>
+                        ))}
+                      </div>
+                      {/* Status stepper */}
+                      <div>
+                        <div style={{ fontSize:10,color:C.subtle,marginBottom:6 }}>STATUS WORKFLOW</div>
+                        <div style={{ display:"flex",alignItems:"center",gap:0 }}>
+                          {INC_STATUSES.map((s,i)=>{
+                            const sc2 = INC_STATUS_COLOR[s];
+                            const isPast    = i < curIdx;
+                            const isCurrent = i === curIdx;
+                            const isFuture  = i > curIdx;
+                            return (
+                              <React.Fragment key={s}>
+                                <button type="button" onClick={()=>updateStatus(selInc.id,s)}
+                                  style={{ fontSize:9,fontFamily:"IBM Plex Mono",padding:"3px 6px",borderRadius:4,cursor:"pointer",border:`1px solid ${isCurrent?sc2.b:isPast?"rgba(74,222,128,0.3)":C.border}`,background:isCurrent?sc2.bg:isPast?"rgba(74,222,128,0.08)":"none",color:isCurrent?sc2.c:isPast?"#4ade80":C.muted,flexShrink:0,transition:"all 0.15s",whiteSpace:"nowrap" }}>{s}</button>
+                                {i < INC_STATUSES.length-1 && <div style={{ flex:1,height:1,background:isPast?"rgba(74,222,128,0.3)":C.border,minWidth:4 }}/>}
+                              </React.Fragment>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Notes */}
+                    <div style={{ background:C.card,border:`1px solid ${C.border}`,borderRadius:8,padding:12,marginBottom:12 }}>
+                      <div style={{ fontSize:11,color:C.subtle,marginBottom:6 }}>Notes</div>
+                      <div style={{ fontSize:12,color:C.text,lineHeight:1.75 }}>{selInc.notes}</div>
+                    </div>
+
+                    {/* Timeline */}
+                    <div style={{ marginBottom:12 }}>
+                      <div className="mono" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:10 }}>Timeline</div>
+                      <div style={{ position:"relative",paddingLeft:16 }}>
+                        <div style={{ position:"absolute",left:6,top:6,bottom:6,width:1,background:C.border }}/>
+                        {[...selInc.timeline].reverse().map((t,i)=>(
+                          <div key={i} style={{ position:"relative",marginBottom:12 }}>
+                            <div style={{ position:"absolute",left:-13,top:4,width:8,height:8,borderRadius:"50%",background:i===0?C.cyan:C.card,border:`1px solid ${i===0?C.cyan:C.border}` }}/>
+                            <div style={{ fontSize:11,color:C.text,lineHeight:1.5 }}>{t.action}</div>
+                            <div style={{ display:"flex",gap:8,marginTop:2 }}>
+                              <span className="mono" style={{ fontSize:10,color:C.cyan }}>{t.actor}</span>
+                              <span className="mono" style={{ fontSize:10,color:C.subtle }}>{timeAgo(t.actorMs)}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Add timeline entry */}
+                    <div style={{ background:C.card,border:`1px solid ${C.border}`,borderRadius:8,padding:12 }}>
+                      <div style={{ fontSize:11,color:C.subtle,marginBottom:6 }}>Add to Timeline</div>
+                      <div style={{ display:"flex",gap:8 }}>
+                        <input value={noteVal} onChange={e=>setNoteVal(e.target.value)} onKeyDown={e=>{ if(e.key==="Enter"&&noteVal.trim()){ addNote(selInc.id,noteVal); setNoteVal(""); }}}
+                          placeholder="Document action taken..."
+                          style={{ flex:1,background:"rgba(255,255,255,0.03)",border:`1px solid ${C.border}`,borderRadius:5,padding:"6px 10px",fontSize:12,color:C.bright,fontFamily:"DM Sans,sans-serif" }}/>
+                        <button type="button" onClick={()=>{ if(noteVal.trim()){ addNote(selInc.id,noteVal); setNoteVal(""); }}}
+                          style={{ padding:"6px 14px",background:C.cyanDim,border:`1px solid rgba(34,211,238,0.3)`,borderRadius:5,color:C.cyan,fontSize:12,fontFamily:"IBM Plex Mono",cursor:"pointer" }}>Add</button>
+                      </div>
+                    </div>
+
+                    {/* AI Executive Summary */}
+                    <div style={{ marginTop:14,borderTop:`1px solid ${C.border}`,paddingTop:14 }}>
+                      <div style={{ display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10 }}>
+                        <div style={{ display:"flex",alignItems:"center",gap:8 }}>
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" fill={C.purple}/><path d="M12 2v3M12 19v3M2 12h3M19 12h3" stroke={C.purple} strokeWidth="1.5" strokeLinecap="round"/></svg>
+                          <span className="mono" style={{ fontSize:11,color:C.purple,textTransform:"uppercase",letterSpacing:"0.1em" }}>AI Executive Summary</span>
+                          {aiStatus==="loading" && <Spinner/>}
+                          {aiStatus==="done" && <span className="mono" style={{ fontSize:10,padding:"2px 6px",borderRadius:3,background:C.greenDim,border:`1px solid rgba(74,222,128,0.3)`,color:C.green }}>Done</span>}
+                        </div>
+                        {(aiStatus==="idle"||aiStatus==="error") &&
+                          <button type="button" onClick={runAI} style={{ padding:"5px 12px",borderRadius:5,fontSize:11,fontFamily:"IBM Plex Mono",cursor:"pointer",background:C.purpleDim,border:`1px solid rgba(167,139,250,0.4)`,color:C.purple,display:"flex",alignItems:"center",gap:5 }}>
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21"/></svg>
+                            Generate Report
+                          </button>
+                        }
+                        {aiStatus==="done" && <button type="button" onClick={()=>{setAiStatus("idle");setAiOutput("");}} style={{ padding:"5px 12px",borderRadius:5,fontSize:11,background:"none",border:`1px solid ${C.border}`,color:C.subtle,cursor:"pointer",fontFamily:"IBM Plex Mono" }}>Clear</button>}
+                      </div>
+                      {aiStatus==="idle" && <div style={{ borderRadius:7,border:`1px solid rgba(167,139,250,0.15)`,background:C.purpleDim,padding:11,fontSize:12,color:C.subtle }}>Generate a plain-language executive summary suitable for briefing leadership or filing a formal incident report.</div>}
+                      {aiStatus==="loading" && (
+                        <div style={{ borderRadius:7,border:`1px solid rgba(167,139,250,0.2)`,background:C.purpleDim,padding:12,display:"flex",flexDirection:"column",gap:8 }}>
+                          {["Reviewing incident timeline...","Analyzing impact and scope...","Drafting executive summary..."].map((s,i)=>(
+                            <div key={i} className="pulse mono" style={{ display:"flex",alignItems:"center",gap:8,fontSize:12,color:C.subtle,animationDelay:`${i*0.3}s` }}>
+                              <span style={{ width:5,height:5,borderRadius:"50%",background:C.purple,display:"inline-block" }}/>{s}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      {aiStatus==="done" && aiOutput && <div style={{ borderRadius:7,border:`1px solid rgba(167,139,250,0.2)`,background:C.purpleDim,padding:12,fontSize:12,color:C.text,lineHeight:1.75 }}>{aiOutput}</div>}
+                      {aiStatus==="error" && <div style={{ borderRadius:7,border:"1px solid rgba(239,68,68,0.3)",background:"rgba(239,68,68,0.05)",padding:11,fontSize:12,color:"#f87171" }}>Error: {aiOutput}</div>}
+                    </div>
+
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Right: Status distribution + severity breakdown */}
+            <div style={{ borderLeft:`1px solid ${C.border}`,display:"flex",flexDirection:"column",overflow:"hidden" }}>
+              <div style={{ padding:"10px 14px",borderBottom:`1px solid ${C.border}` }}>
+                <span className="mono" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em" }}>Metrics</span>
+              </div>
+              <div style={{ flex:1,overflowY:"auto",padding:14 }}>
+
+                {/* MTTD/MTTR cards */}
+                <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:16 }}>
+                  {[["MTTD",`${avgMTTD}m`,"Mean Time to Detect","#fbbf24"],["MTTR",`${avgMTTR}m`,"Mean Time to Respond",C.cyan]].map(([k,v,sub,c])=>(
+                    <div key={k} style={{ background:C.card,border:`1px solid ${C.border}`,borderRadius:8,padding:10,textAlign:"center" }}>
+                      <div className="mono" style={{ fontSize:22,fontWeight:700,color:c }}>{v}</div>
+                      <div className="mono" style={{ fontSize:10,color:C.subtle,marginTop:2 }}>{k}</div>
+                      <div style={{ fontSize:10,color:C.muted,marginTop:2 }}>{sub}</div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Status distribution */}
+                <div className="mono" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:10 }}>By Status</div>
+                {INC_STATUSES.map(s=>{
+                  const count = incidents.filter(i=>i.status===s).length;
+                  const sc2   = INC_STATUS_COLOR[s];
+                  if (!count) return null;
+                  return (
+                    <div key={s} style={{ marginBottom:8 }}>
+                      <div style={{ display:"flex",justifyContent:"space-between",fontSize:12,marginBottom:3 }}>
+                        <span style={{ color:C.text }}>{s}</span>
+                        <span className="mono" style={{ color:C.subtle }}>{count}</span>
+                      </div>
+                      <div style={{ height:5,background:"rgba(255,255,255,0.05)",borderRadius:3,overflow:"hidden" }}>
+                        <div style={{ height:"100%",background:sc2.c,borderRadius:3,width:`${(count/incidents.length)*100}%`,opacity:0.8,transition:"width 0.5s ease" }}/>
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {/* Severity breakdown */}
+                <div className="mono" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:10,marginTop:16 }}>By Severity</div>
+                {["CRITICAL","HIGH","MEDIUM","LOW"].map(sev=>{
+                  const count = incidents.filter(i=>i.severity===sev).length;
+                  if (!count) return null;
+                  const sc2 = SEV[sev];
+                  return (
+                    <div key={sev} style={{ marginBottom:8 }}>
+                      <div style={{ display:"flex",justifyContent:"space-between",fontSize:12,marginBottom:3 }}>
+                        <span style={{ color:sc2.text }}>{sev}</span>
+                        <span className="mono" style={{ color:C.subtle }}>{count}</span>
+                      </div>
+                      <div style={{ height:5,background:"rgba(255,255,255,0.05)",borderRadius:3,overflow:"hidden" }}>
+                        <div style={{ height:"100%",background:sc2.dot,borderRadius:3,width:`${(count/incidents.length)*100}%`,opacity:0.8,transition:"width 0.5s ease" }}/>
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {/* Recent closed */}
+                <div className="mono" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:10,marginTop:16 }}>Recently Closed</div>
+                {incidents.filter(i=>i.status==="Closed").map(i=>(
+                  <button key={i.id} type="button" onClick={()=>setSelInc(i)}
+                    style={{ width:"100%",textAlign:"left",padding:"7px 8px",borderRadius:5,marginBottom:4,background:"none",border:`1px solid ${C.border}`,cursor:"pointer",transition:"background 0.15s" }}
+                    onMouseEnter={e=>e.currentTarget.style.background=C.card}
+                    onMouseLeave={e=>e.currentTarget.style.background="none"}>
+                    <div className="mono" style={{ fontSize:10,color:C.green,marginBottom:2 }}>{i.id} ✓</div>
+                    <div style={{ fontSize:11,color:C.text,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap" }} title={i.title}>{i.title}</div>
+                  </button>
+                ))}
+
+              </div>
+            </div>
+
+          </div>
         </div>
       );
     }
@@ -749,7 +1149,7 @@
     }
 
     // ── AlertDetail ───────────────────────────────────────────────────────────
-    function AlertDetail({ alert, onTriage }) {
+    function AlertDetail({ alert, onTriage, onCreateIncident }) {
       if(!alert) return (
         <div style={{ display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",height:"100%",color:C.muted,gap:8 }}>
           <svg width="32" height="32" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeWidth="1.5" d="M9 12h6m-3-3v6M12 3l1.5 2.5H18l-2 3 2 3h-4.5L12 14l-1.5-2.5H6l2-3-2-3h4.5L12 3z"/></svg>
@@ -776,6 +1176,7 @@
                   onMouseLeave={e=>{ e.currentTarget.style.background="rgba(255,255,255,0.04)"; e.currentTarget.style.color=C.secondary; e.currentTarget.style.borderColor=C.border2; }}
                 >{action}</button>
               ))}
+              <button type="button" onClick={()=>onCreateIncident&&onCreateIncident(alert)} style={{ padding:"4px 10px",fontSize:11,fontFamily:"IBM Plex Mono",borderRadius:4,cursor:"pointer",border:`1px solid rgba(167,139,250,0.4)`,background:C.purpleDim,color:C.purple,transition:"all 0.15s",marginLeft:"auto" }}>+ Incident</button>
             </div>
           </div>
           {/* Metadata */}
@@ -1031,8 +1432,8 @@
             {/* Sidebar */}
             <Sidebar active={sideTab} onChange={setSideTab}/>
 
-            {/* Coming Soon pages for non-dashboard/grc tabs */}
-            {sideTab !== "dashboard" && sideTab !== "alerts" && sideTab !== "grc" && (
+            {/* Coming Soon pages for non-dashboard/grc/incidents tabs */}
+            {sideTab !== "dashboard" && sideTab !== "alerts" && sideTab !== "grc" && sideTab !== "incidents" && (
               <div style={{ flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:16,color:C.muted }}>
                 <svg width="48" height="48" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeWidth="1" d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
                 <div style={{ textAlign:"center" }}>
@@ -1040,6 +1441,13 @@
                   <div style={{ fontSize:13,color:C.subtle }}>Coming in Phase 4 — Incident Management System</div>
                 </div>
                 <button type="button" onClick={()=>setSideTab("dashboard")} style={{ padding:"8px 20px",background:C.cyanDim,border:`1px solid rgba(34,211,238,0.3)`,borderRadius:6,color:C.cyan,fontSize:12,fontFamily:"IBM Plex Mono",cursor:"pointer" }}>Back to Dashboard</button>
+              </div>
+            )}
+
+            {/* Incident Management */}
+            {sideTab === "incidents" && (
+              <div style={{ flex:1,overflow:"hidden",display:"flex",flexDirection:"column" }}>
+                <IncidentDashboard/>
               </div>
             )}
 
@@ -1088,7 +1496,7 @@
                 ))}
               </div>
               <div style={{ flex:1,overflowY:"auto",padding:16 }}>
-                {tab==="alerts" && <AlertDetail alert={sel} onTriage={handleTriage}/>}
+                {tab==="alerts" && <AlertDetail alert={sel} onTriage={handleTriage} onCreateIncident={(a)=>{ setSideTab("incidents"); setToast(`Incident created from ${a.id}`); }}/>}
                 {tab==="cisa"   && <div><div style={{ display:"flex",alignItems:"center",gap:8,marginBottom:12 }}><Dot live={true}/><span style={{ fontSize:11,color:C.subtle }}>Live CISA Known Exploited Vulnerabilities — proxied via Supabase Edge Function</span></div><CISAFeed vulns={kevs} loaded={loaded}/></div>}
               </div>
             </div>
@@ -1137,7 +1545,7 @@
                 </div>
                 <div style={{ marginTop:22,border:`1px solid ${C.border}`,borderRadius:8,padding:12,background:C.card }}>
                   <div className="mono" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:12 }}>Platform Roadmap</div>
-                  {[["Phase 1","Threat Dashboard","LIVE",C.cyan,C.cyanDim],["Phase 2","AI Analyst Agent","LIVE",C.green,C.greenDim],["Phase 3","GRC Tracker","LIVE",C.green,C.greenDim],["Phase 4","Incident Mgmt","NEXT","#fbbf24","rgba(234,179,8,0.1)"]].map(([p,n,s,c,b])=>(
+                  {[["Phase 1","Threat Dashboard","LIVE",C.cyan,C.cyanDim],["Phase 2","AI Analyst Agent","LIVE",C.green,C.greenDim],["Phase 3","GRC Tracker","LIVE",C.green,C.greenDim],["Phase 4","Incident Mgmt","LIVE",C.green,C.greenDim]].map(([p,n,s,c,b])=>(
                     <div key={p} style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8 }}>
                       <div style={{ fontSize:12 }}><span className="mono" style={{ color:C.muted }}>{p} </span><span style={{ color:C.secondary }}>{n}</span></div>
                       <span className="mono" style={{ fontSize:11,padding:"2px 8px",borderRadius:4,color:c,background:b,border:`1px solid ${c}40` }}>{s}</span>
