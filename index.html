@@ -253,7 +253,7 @@
         { id:"dashboard", tip:"Dashboard", icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M9 22V12h6v10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg> },
         { id:"alerts",    tip:"Alerts",    icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg> },
         { id:"hunt",      tip:"Threat Hunt",icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="1.5"/><path d="M21 21l-4.35-4.35" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg> },
-        { id:"reports",   tip:"Reports",   icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg> },
+        { id:"grc",      tip:"GRC Tracker",icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.25C17.25 22.15 21 17.25 21 12V7L12 2z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M9 12l2 2 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg> },
         { id:"settings",  tip:"Settings",  icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.5"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" stroke="currentColor" strokeWidth="1.5"/></svg> },
       ];
       return (
@@ -267,6 +267,352 @@
               <span className="tip">{item.tip}</span>
             </button>
           ))}
+        </div>
+      );
+    }
+
+    // ── GRC Data ──────────────────────────────────────────────────────────────
+    const NIST_FUNCTIONS = [
+      { id:"GV", name:"Govern",   color:"#a78bfa", desc:"Establishes cybersecurity strategy, expectations, and policy" },
+      { id:"ID", name:"Identify", color:"#22d3ee", desc:"Understand cybersecurity risks to systems, people, assets, data" },
+      { id:"PR", name:"Protect",  color:"#4ade80", desc:"Implement safeguards to manage cybersecurity risks" },
+      { id:"DE", name:"Detect",   color:"#fbbf24", desc:"Find and analyze possible cybersecurity attacks and compromises" },
+      { id:"RS", name:"Respond",  color:"#f97316", desc:"Take action regarding a detected cybersecurity incident" },
+      { id:"RC", name:"Recover",  color:"#f87171", desc:"Restore assets and operations affected by cybersecurity incidents" },
+    ];
+
+    const CONTROLS_RAW = [
+      // GOVERN
+      { id:"GV.OC-01", fn:"GV", name:"Cybersecurity Risk Strategy",       status:"Implemented",  priority:"Critical", owner:"CISO",       evidence:"Policy v2.3",      desc:"Organizational cybersecurity risk strategy is established and communicated." },
+      { id:"GV.OC-02", fn:"GV", name:"Roles & Responsibilities",          status:"Implemented",  priority:"Critical", owner:"HR/CISO",    evidence:"RACI Matrix",      desc:"Cybersecurity roles, responsibilities, and authorities are established and communicated." },
+      { id:"GV.OC-03", fn:"GV", name:"Legal & Regulatory Requirements",   status:"In Progress",  priority:"High",     owner:"Legal",      evidence:"Compliance Log",   desc:"Legal, regulatory, and contractual cybersecurity obligations are understood." },
+      { id:"GV.RM-01", fn:"GV", name:"Risk Management Strategy",          status:"Implemented",  priority:"Critical", owner:"Risk Team",  evidence:"RMP v1.1",         desc:"Risk management strategy is established and communicated." },
+      { id:"GV.RM-02", fn:"GV", name:"Risk Appetite & Tolerance",         status:"In Progress",  priority:"High",     owner:"Board",      evidence:"Draft Charter",    desc:"Risk appetite and risk tolerance statements are established and communicated." },
+      // IDENTIFY
+      { id:"ID.AM-01", fn:"ID", name:"Hardware Asset Inventory",          status:"Implemented",  priority:"High",     owner:"IT Ops",     evidence:"CMDB v4.2",        desc:"Inventories of hardware managed by the organization are maintained." },
+      { id:"ID.AM-02", fn:"ID", name:"Software Asset Inventory",          status:"Implemented",  priority:"High",     owner:"IT Ops",     evidence:"Software Register", desc:"Inventories of software, services, and data managed by the organization are maintained." },
+      { id:"ID.AM-03", fn:"ID", name:"Network Architecture Documentation",status:"In Progress",  priority:"Medium",   owner:"Network",    evidence:"Diagrams Draft",   desc:"Representations of the organization's authorized network communication are maintained." },
+      { id:"ID.RA-01", fn:"ID", name:"Vulnerability Identification",      status:"Implemented",  priority:"Critical", owner:"SecOps",     evidence:"Vuln Scan Reports", desc:"Vulnerabilities in assets are identified, validated, and recorded." },
+      { id:"ID.RA-02", fn:"ID", name:"Threat Intelligence Program",       status:"Not Started",  priority:"High",     owner:"SOC",        evidence:"—",                desc:"Cyber threat intelligence is received from information sharing forums and sources." },
+      // PROTECT
+      { id:"PR.AA-01", fn:"PR", name:"Identity Management",               status:"Implemented",  priority:"Critical", owner:"IT Ops",     evidence:"IAM Policy",       desc:"Identities and credentials for authorized users, services, and hardware are managed." },
+      { id:"PR.AA-02", fn:"PR", name:"Access Control Enforcement",        status:"Implemented",  priority:"Critical", owner:"IT Ops",     evidence:"AC Policy v3",     desc:"Access to assets is managed, incorporating principle of least privilege." },
+      { id:"PR.DS-01", fn:"PR", name:"Data at Rest Protection",           status:"Implemented",  priority:"Critical", owner:"Data Team",  evidence:"Encryption Audit", desc:"The confidentiality, integrity, and availability of data-at-rest are protected." },
+      { id:"PR.DS-02", fn:"PR", name:"Data in Transit Protection",        status:"Implemented",  priority:"Critical", owner:"Network",    evidence:"TLS Audit",        desc:"The confidentiality, integrity, and availability of data-in-transit are protected." },
+      { id:"PR.AT-01", fn:"PR", name:"Security Awareness Training",       status:"In Progress",  priority:"High",     owner:"HR",         evidence:"Training Records",  desc:"Personnel are provided with cybersecurity awareness and training." },
+      { id:"PR.PS-01", fn:"PR", name:"Configuration Management",          status:"Not Started",  priority:"High",     owner:"IT Ops",     evidence:"—",                desc:"Configurations of hardware, software, and other technology are established and maintained." },
+      // DETECT
+      { id:"DE.CM-01", fn:"DE", name:"Network Monitoring",                status:"Implemented",  priority:"Critical", owner:"SOC",        evidence:"SIEM Dashboard",   desc:"Networks and network services are monitored to find potentially adverse events." },
+      { id:"DE.CM-03", fn:"DE", name:"Personnel Activity Monitoring",     status:"In Progress",  priority:"Medium",   owner:"HR/Legal",   evidence:"DLP Policy Draft", desc:"Personnel activity and technology usage are monitored to find potentially adverse events." },
+      { id:"DE.AE-01", fn:"DE", name:"Anomaly Detection",                 status:"Implemented",  priority:"High",     owner:"SOC",        evidence:"Alert Runbooks",   desc:"A baseline of network operations and expected data flows is established and managed." },
+      { id:"DE.AE-02", fn:"DE", name:"Event Data Aggregation",            status:"Implemented",  priority:"High",     owner:"SOC",        evidence:"SIEM Config",      desc:"Potentially adverse events are analyzed to better characterize the events." },
+      { id:"DE.AE-06", fn:"DE", name:"Vulnerability Monitoring",          status:"Not Started",  priority:"Medium",   owner:"SecOps",     evidence:"—",                desc:"Information on adverse events is provided to authorized staff and tools." },
+      // RESPOND
+      { id:"RS.MA-01", fn:"RS", name:"Incident Response Plan",            status:"Implemented",  priority:"Critical", owner:"CISO",       evidence:"IRP v2.0",         desc:"The incident response plan is established, communicated, and applied." },
+      { id:"RS.MA-02", fn:"RS", name:"Incident Triage & Analysis",        status:"Implemented",  priority:"Critical", owner:"SOC",        evidence:"Triage Runbook",   desc:"Incidents are triaged, analyzed, and categorized." },
+      { id:"RS.CO-01", fn:"RS", name:"Incident Reporting",                status:"In Progress",  priority:"High",     owner:"Comms",      evidence:"Comms Template",   desc:"Personnel know their roles and order of operations when a response is needed." },
+      { id:"RS.AN-01", fn:"RS", name:"Investigation Procedures",          status:"Not Started",  priority:"High",     owner:"SOC",        evidence:"—",                desc:"Investigations are conducted to understand the root cause of incidents." },
+      { id:"RS.MI-01", fn:"RS", name:"Incident Containment",              status:"Implemented",  priority:"Critical", owner:"SOC",        evidence:"Containment SOP",  desc:"Incidents are contained." },
+      // RECOVER
+      { id:"RC.RP-01", fn:"RC", name:"Recovery Plan",                     status:"Implemented",  priority:"Critical", owner:"IT Ops",     evidence:"DRP v1.4",         desc:"The recovery portion of the incident response plan is executed." },
+      { id:"RC.RP-02", fn:"RC", name:"Recovery Strategy Testing",         status:"In Progress",  priority:"High",     owner:"IT Ops",     evidence:"Tabletop Results", desc:"Recovery actions are selected, scoped, prioritized, and performed." },
+      { id:"RC.CO-01", fn:"RC", name:"Recovery Communication",            status:"Not Started",  priority:"Medium",   owner:"Comms",      evidence:"—",                desc:"Recovery activities and progress in restoring operations are communicated." },
+      { id:"RC.CO-03", fn:"RC", name:"Post-Incident Review",              status:"Not Started",  priority:"Medium",   owner:"CISO",       evidence:"—",                desc:"Recovery activities are communicated to relevant parties." },
+    ];
+
+    const RISKS_DATA = [
+      { id:"RSK-001", title:"Ransomware Attack",      likelihood:4, impact:5, category:"Cyber",          status:"Open",     control:"DE.CM-01", treatment:"Mitigate" },
+      { id:"RSK-002", title:"Phishing Campaign",      likelihood:5, impact:3, category:"Cyber",          status:"Open",     control:"PR.AT-01", treatment:"Mitigate" },
+      { id:"RSK-003", title:"Insider Threat",         likelihood:2, impact:5, category:"Personnel",      status:"Accepted", control:"PR.AA-02", treatment:"Accept"   },
+      { id:"RSK-004", title:"Third-Party Breach",     likelihood:3, impact:4, category:"Supply Chain",   status:"Open",     control:"GV.OC-03", treatment:"Transfer" },
+      { id:"RSK-005", title:"Unpatched Systems",      likelihood:4, impact:3, category:"Vulnerability",  status:"Open",     control:"ID.RA-01", treatment:"Mitigate" },
+      { id:"RSK-006", title:"DDoS Attack",            likelihood:3, impact:3, category:"Availability",   status:"Accepted", control:"DE.CM-01", treatment:"Accept"   },
+    ];
+
+    const STATUS_STYLE = {
+      "Implemented": { c:"#4ade80", bg:"rgba(74,222,128,0.1)",  b:"rgba(74,222,128,0.3)"  },
+      "In Progress":  { c:"#fbbf24", bg:"rgba(234,179,8,0.1)",  b:"rgba(234,179,8,0.3)"  },
+      "Not Started":  { c:"#f87171", bg:"rgba(239,68,68,0.1)",  b:"rgba(239,68,68,0.3)"  },
+      "Not Applicable":{ c:"#475569", bg:"rgba(71,85,105,0.1)", b:"rgba(71,85,105,0.3)"  },
+    };
+
+    const PRIORITY_COLOR = { Critical:"#dc2626", High:"#f97316", Medium:"#fbbf24", Low:"#4ade80" };
+    const RISK_LEVEL = (l,i) => { const s=l*i; return s>=16?"CRITICAL":s>=10?"HIGH":s>=5?"MEDIUM":"LOW"; };
+    const RISK_COLOR = { CRITICAL:"#dc2626", HIGH:"#f97316", MEDIUM:"#fbbf24", LOW:"#4ade80" };
+
+    // ── GRC Dashboard ─────────────────────────────────────────────────────────
+    function GRCDashboard() {
+      const [controls,    setControls]    = useState(CONTROLS_RAW);
+      const [selectedCtrl,setSelectedCtrl]= useState(CONTROLS_RAW[0]);
+      const [activeFunc,  setActiveFunc]  = useState("ALL");
+      const [aiStatus,    setAiStatus]    = useState("idle");
+      const [aiOutput,    setAiOutput]    = useState("");
+      const [activeTab,   setActiveTab]   = useState("controls"); // controls | risks
+
+      const implemented  = controls.filter(c=>c.status==="Implemented").length;
+      const inProgress   = controls.filter(c=>c.status==="In Progress").length;
+      const notStarted   = controls.filter(c=>c.status==="Not Started").length;
+      const score        = Math.round((implemented / controls.length) * 100);
+
+      const filtered = activeFunc==="ALL" ? controls : controls.filter(c=>c.fn===activeFunc);
+
+      const updateStatus = (id, newStatus) => {
+        setControls(prev=>prev.map(c=>c.id===id?{...c,status:newStatus}:c));
+        setSelectedCtrl(prev=>prev?.id===id?{...prev,status:newStatus}:prev);
+      };
+
+      const runAI = async () => {
+        if (!selectedCtrl) return;
+        setAiStatus("loading"); setAiOutput("");
+        try {
+          const res = await fetch(SUPABASE_URL, {
+            method:"POST", headers:sbHeaders(),
+            body:JSON.stringify({ grcControl: selectedCtrl }),
+          });
+          const data = await res.json();
+          if (!res.ok || data.error) throw new Error(data.error || "Edge function error");
+          setAiOutput(data.guidance || data.analysis?.summary || "Guidance generated.");
+          setAiStatus("done");
+        } catch(e) { setAiOutput(e.message); setAiStatus("error"); }
+      };
+
+      useEffect(()=>{ setAiStatus("idle"); setAiOutput(""); },[selectedCtrl?.id]);
+
+      const scoreColor = score>=80?"#4ade80":score>=60?"#fbbf24":"#f87171";
+      const fnColor = (fn) => NIST_FUNCTIONS.find(f=>f.id===fn)?.color || C.subtle;
+
+      return (
+        <div style={{ display:"flex",flexDirection:"column",height:"100%",overflow:"hidden" }}>
+
+          {/* GRC Header Stats */}
+          <div style={{ padding:"12px 16px",borderBottom:`1px solid ${C.border}`,display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8,flexShrink:0 }}>
+            {[
+              { label:"Total Controls", value:controls.length,  color:C.bright },
+              { label:"Implemented",    value:implemented,       color:"#4ade80" },
+              { label:"In Progress",    value:inProgress,        color:"#fbbf24" },
+              { label:"Gaps",           value:notStarted,        color:"#f87171" },
+            ].map(s=>(
+              <div key={s.label} style={{ background:C.card,border:`1px solid ${C.border}`,borderRadius:8,padding:"8px 12px" }}>
+                <div className="mono" style={{ fontSize:20,fontWeight:700,color:s.color }}>{s.value}</div>
+                <div style={{ fontSize:11,color:C.subtle,marginTop:2 }}>{s.label}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Main 3-col */}
+          <div style={{ flex:1,display:"grid",gridTemplateColumns:"240px 1fr 260px",overflow:"hidden" }}>
+
+            {/* Left: Function filter + control list */}
+            <div style={{ borderRight:`1px solid ${C.border}`,display:"flex",flexDirection:"column",overflow:"hidden" }}>
+              <div style={{ padding:"8px",borderBottom:`1px solid ${C.border}`,flexShrink:0 }}>
+                <div style={{ display:"flex",flexWrap:"wrap",gap:4 }}>
+                  <button type="button" onClick={()=>setActiveFunc("ALL")}
+                    style={{ fontSize:10,padding:"3px 7px",borderRadius:4,fontFamily:"IBM Plex Mono",cursor:"pointer",border:`1px solid ${activeFunc==="ALL"?C.cyan:C.border}`,background:activeFunc==="ALL"?C.cyanDim:"none",color:activeFunc==="ALL"?C.cyan:C.subtle }}>ALL</button>
+                  {NIST_FUNCTIONS.map(f=>(
+                    <button key={f.id} type="button" onClick={()=>setActiveFunc(f.id)}
+                      style={{ fontSize:10,padding:"3px 7px",borderRadius:4,fontFamily:"IBM Plex Mono",cursor:"pointer",border:`1px solid ${activeFunc===f.id?f.color:C.border}`,background:activeFunc===f.id?`${f.color}18`:"none",color:activeFunc===f.id?f.color:C.subtle }}>{f.id}</button>
+                  ))}
+                </div>
+              </div>
+              <div style={{ flex:1,overflowY:"auto",padding:8 }}>
+                {filtered.map(ctrl=>{
+                  const ss = STATUS_STYLE[ctrl.status] || STATUS_STYLE["Not Started"];
+                  const fc = fnColor(ctrl.fn);
+                  const isSelected = selectedCtrl?.id===ctrl.id;
+                  return (
+                    <button key={ctrl.id} type="button" onClick={()=>setSelectedCtrl(ctrl)}
+                      style={{ width:"100%",textAlign:"left",padding:"8px 10px",borderRadius:6,marginBottom:4,cursor:"pointer",border:`1px solid ${isSelected?ss.b:C.border}`,borderLeft:`3px solid ${isSelected?fc:"transparent"}`,background:isSelected?C.card:"rgba(255,255,255,0.01)",transition:"all 0.15s" }}>
+                      <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:3 }}>
+                        <span className="mono" style={{ fontSize:10,color:fc }}>{ctrl.id}</span>
+                        <span style={{ fontSize:10,padding:"1px 5px",borderRadius:3,color:ss.c,background:ss.bg,border:`1px solid ${ss.b}`,fontFamily:"IBM Plex Mono" }}>{ctrl.status.replace(" ","·")}</span>
+                      </div>
+                      <div style={{ fontSize:12,color:C.text,lineHeight:1.3 }}>{ctrl.name}</div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Center: Tabs — Controls detail | Risk Register */}
+            <div style={{ display:"flex",flexDirection:"column",overflow:"hidden" }}>
+              <div style={{ borderBottom:`1px solid ${C.border}`,display:"flex",flexShrink:0 }}>
+                {[{key:"controls",label:"Control Detail"},{key:"risks",label:`Risk Register (${RISKS_DATA.length})`}].map(t=>(
+                  <button key={t.key} type="button" onClick={()=>setActiveTab(t.key)}
+                    style={{ padding:"10px 16px",fontSize:11,textTransform:"uppercase",letterSpacing:"0.1em",background:"none",border:"none",cursor:"pointer",fontFamily:"IBM Plex Mono",borderBottom:activeTab===t.key?`2px solid ${C.cyan}`:"2px solid transparent",color:activeTab===t.key?C.cyan:C.subtle }}>{t.label}</button>
+                ))}
+              </div>
+
+              <div style={{ flex:1,overflowY:"auto",padding:16 }}>
+                {activeTab==="controls" && selectedCtrl && (()=>{
+                  const ss = STATUS_STYLE[selectedCtrl.status] || STATUS_STYLE["Not Started"];
+                  const fc = fnColor(selectedCtrl.fn);
+                  const fnObj = NIST_FUNCTIONS.find(f=>f.id===selectedCtrl.fn);
+                  return (
+                    <div style={{ display:"flex",flexDirection:"column",gap:12 }}>
+                      <div style={{ borderRadius:8,border:`1px solid ${ss.b}`,background:ss.bg,padding:14 }}>
+                        <div style={{ display:"flex",alignItems:"center",gap:8,marginBottom:6 }}>
+                          <span className="mono" style={{ fontSize:12,color:fc,fontWeight:700 }}>{selectedCtrl.id}</span>
+                          <span style={{ fontSize:11,padding:"2px 8px",borderRadius:4,color:ss.c,background:ss.bg,border:`1px solid ${ss.b}`,fontFamily:"IBM Plex Mono" }}>{selectedCtrl.status}</span>
+                          <span style={{ marginLeft:"auto",fontSize:11,padding:"2px 8px",borderRadius:4,color:PRIORITY_COLOR[selectedCtrl.priority],background:`${PRIORITY_COLOR[selectedCtrl.priority]}18`,border:`1px solid ${PRIORITY_COLOR[selectedCtrl.priority]}40`,fontFamily:"IBM Plex Mono" }}>{selectedCtrl.priority}</span>
+                        </div>
+                        <div style={{ fontSize:15,fontWeight:600,color:C.bright,marginBottom:6 }}>{selectedCtrl.name}</div>
+                        <div style={{ fontSize:12,color:C.secondary,lineHeight:1.7 }}>{selectedCtrl.desc}</div>
+                      </div>
+
+                      <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8 }}>
+                        {[["Framework","NIST CSF 2.0"],["Function",`${fnObj?.id} — ${fnObj?.name}`],["Owner",selectedCtrl.owner],["Evidence",selectedCtrl.evidence],["Last Reviewed","Apr 2026"],["Next Review","Jul 2026"]].map(([k,v])=>(
+                          <div key={k} style={{ background:C.card,border:`1px solid ${C.border}`,borderRadius:6,padding:8 }}>
+                            <div style={{ fontSize:10,color:C.subtle,marginBottom:2 }}>{k}</div>
+                            <div className="mono" style={{ fontSize:11,color:C.text }}>{v}</div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Status updater */}
+                      <div style={{ background:C.card,border:`1px solid ${C.border}`,borderRadius:8,padding:12 }}>
+                        <div style={{ fontSize:11,color:C.subtle,marginBottom:8 }}>Update Status</div>
+                        <div style={{ display:"flex",gap:6,flexWrap:"wrap" }}>
+                          {["Implemented","In Progress","Not Started","Not Applicable"].map(s=>{
+                            const st = STATUS_STYLE[s];
+                            const isActive = selectedCtrl.status===s;
+                            return (
+                              <button key={s} type="button" onClick={()=>updateStatus(selectedCtrl.id,s)}
+                                style={{ padding:"5px 12px",borderRadius:5,fontSize:11,fontFamily:"IBM Plex Mono",cursor:"pointer",border:`1px solid ${isActive?st.b:C.border}`,background:isActive?st.bg:"none",color:isActive?st.c:C.subtle,transition:"all 0.15s" }}>{s}</button>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* AI Guidance */}
+                      <div style={{ borderTop:`1px solid ${C.border}`,paddingTop:14 }}>
+                        <div style={{ display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10 }}>
+                          <div style={{ display:"flex",alignItems:"center",gap:8 }}>
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" fill={C.purple}/><path d="M12 2v3M12 19v3M2 12h3M19 12h3" stroke={C.purple} strokeWidth="1.5" strokeLinecap="round"/></svg>
+                            <span className="mono" style={{ fontSize:11,color:C.purple,textTransform:"uppercase",letterSpacing:"0.1em" }}>AI Implementation Guidance</span>
+                            {aiStatus==="loading" && <Spinner/>}
+                            {aiStatus==="done" && <span className="mono" style={{ fontSize:10,padding:"2px 6px",borderRadius:3,background:C.greenDim,border:`1px solid rgba(74,222,128,0.3)`,color:C.green }}>Done</span>}
+                          </div>
+                          {(aiStatus==="idle"||aiStatus==="error") &&
+                            <button type="button" onClick={runAI} style={{ padding:"5px 12px",borderRadius:5,fontSize:11,fontFamily:"IBM Plex Mono",cursor:"pointer",background:C.purpleDim,border:`1px solid rgba(167,139,250,0.4)`,color:C.purple,display:"flex",alignItems:"center",gap:5 }}>
+                              <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21"/></svg>
+                              Get Guidance
+                            </button>
+                          }
+                          {aiStatus==="done" && <button type="button" onClick={()=>{setAiStatus("idle");setAiOutput("");}} style={{ padding:"5px 12px",borderRadius:5,fontSize:11,background:"none",border:`1px solid ${C.border}`,color:C.subtle,cursor:"pointer",fontFamily:"IBM Plex Mono" }}>Clear</button>}
+                        </div>
+                        {aiStatus==="idle" && <div style={{ borderRadius:7,border:`1px solid rgba(167,139,250,0.15)`,background:C.purpleDim,padding:11,fontSize:12,color:C.subtle }}>Get AI-generated implementation steps, evidence requirements, and best practices for this control.</div>}
+                        {aiStatus==="loading" && (
+                          <div style={{ borderRadius:7,border:`1px solid rgba(167,139,250,0.2)`,background:C.purpleDim,padding:12,display:"flex",flexDirection:"column",gap:8 }}>
+                            {["Analyzing control requirements...","Checking implementation patterns...","Generating guidance..."].map((s,i)=>(
+                              <div key={i} className="pulse mono" style={{ display:"flex",alignItems:"center",gap:8,fontSize:12,color:C.subtle,animationDelay:`${i*0.3}s` }}>
+                                <span style={{ width:5,height:5,borderRadius:"50%",background:C.purple,display:"inline-block" }}/>{s}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        {aiStatus==="done" && aiOutput && <div style={{ borderRadius:7,border:`1px solid rgba(167,139,250,0.2)`,background:C.purpleDim,padding:12,fontSize:12,color:C.text,lineHeight:1.75 }}>{aiOutput}</div>}
+                        {aiStatus==="error" && <div style={{ borderRadius:7,border:"1px solid rgba(239,68,68,0.3)",background:"rgba(239,68,68,0.05)",padding:11,fontSize:12,color:"#f87171" }}>Error: {aiOutput}</div>}
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {activeTab==="risks" && (
+                  <div style={{ display:"flex",flexDirection:"column",gap:8 }}>
+                    <div style={{ fontSize:12,color:C.subtle,marginBottom:4 }}>Risk scores calculated as Likelihood × Impact (1–25 scale).</div>
+                    {RISKS_DATA.map(r=>{
+                      const score = r.likelihood * r.impact;
+                      const level = RISK_LEVEL(r.likelihood, r.impact);
+                      const rc    = RISK_COLOR[level];
+                      return (
+                        <div key={r.id} style={{ background:C.card,border:`1px solid ${C.border}`,borderLeft:`3px solid ${rc}`,borderRadius:8,padding:12 }}>
+                          <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6 }}>
+                            <div style={{ display:"flex",alignItems:"center",gap:8 }}>
+                              <span className="mono" style={{ fontSize:10,color:C.subtle }}>{r.id}</span>
+                              <span style={{ fontSize:13,fontWeight:600,color:C.bright }}>{r.title}</span>
+                            </div>
+                            <span className="mono" style={{ fontSize:12,fontWeight:700,color:rc }}>{level} ({score})</span>
+                          </div>
+                          <div style={{ display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:6 }}>
+                            {[["Likelihood",`${r.likelihood}/5`],["Impact",`${r.impact}/5`],["Category",r.category],["Treatment",r.treatment]].map(([k,v])=>(
+                              <div key={k}>
+                                <div style={{ fontSize:10,color:C.subtle }}>{k}</div>
+                                <div className="mono" style={{ fontSize:11,color:C.text,marginTop:1 }}>{v}</div>
+                              </div>
+                            ))}
+                          </div>
+                          <div style={{ marginTop:6,fontSize:11,color:C.subtle }}>
+                            Control: <span className="mono" style={{ color:C.cyan }}>{r.control}</span>
+                            <span style={{ marginLeft:12,padding:"1px 6px",borderRadius:3,fontSize:10,fontFamily:"IBM Plex Mono",color:r.status==="Open"?"#f87171":"#4ade80",background:r.status==="Open"?"rgba(239,68,68,0.1)":"rgba(74,222,128,0.1)",border:`1px solid ${r.status==="Open"?"rgba(239,68,68,0.3)":"rgba(74,222,128,0.3)"}` }}>{r.status}</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Right: Compliance score + function breakdown */}
+            <div style={{ borderLeft:`1px solid ${C.border}`,display:"flex",flexDirection:"column",overflow:"hidden" }}>
+              <div style={{ padding:"10px 14px",borderBottom:`1px solid ${C.border}` }}>
+                <span className="mono" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em" }}>Compliance</span>
+              </div>
+              <div style={{ flex:1,overflowY:"auto",padding:14 }}>
+
+                {/* Score gauge */}
+                <div style={{ background:C.card,border:`1px solid ${C.border}`,borderRadius:10,padding:16,marginBottom:14,textAlign:"center" }}>
+                  <div style={{ position:"relative",display:"inline-flex",alignItems:"center",justifyContent:"center",width:100,height:100,marginBottom:8 }}>
+                    <svg width="100" height="100" viewBox="0 0 100 100">
+                      <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="8"/>
+                      <circle cx="50" cy="50" r="42" fill="none" stroke={scoreColor} strokeWidth="8"
+                        strokeDasharray={`${2*Math.PI*42}`}
+                        strokeDashoffset={`${2*Math.PI*42*(1-score/100)}`}
+                        strokeLinecap="round"
+                        transform="rotate(-90 50 50)"
+                        style={{ transition:"stroke-dashoffset 1s ease" }}/>
+                    </svg>
+                    <div style={{ position:"absolute",textAlign:"center" }}>
+                      <div className="mono" style={{ fontSize:22,fontWeight:700,color:scoreColor }}>{score}%</div>
+                    </div>
+                  </div>
+                  <div style={{ fontSize:12,color:C.secondary }}>NIST CSF 2.0 Compliance</div>
+                  <div style={{ fontSize:11,color:C.subtle,marginTop:2 }}>{implemented} of {controls.length} controls</div>
+                </div>
+
+                {/* Per-function breakdown */}
+                <div className="mono" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:10 }}>By Function</div>
+                {NIST_FUNCTIONS.map(fn=>{
+                  const fnCtrls = controls.filter(c=>c.fn===fn.id);
+                  const fnImpl  = fnCtrls.filter(c=>c.status==="Implemented").length;
+                  const pct     = fnCtrls.length ? Math.round((fnImpl/fnCtrls.length)*100) : 0;
+                  return (
+                    <div key={fn.id} style={{ marginBottom:10 }}>
+                      <div style={{ display:"flex",justifyContent:"space-between",fontSize:12,marginBottom:4 }}>
+                        <span style={{ color:C.text }}><span className="mono" style={{ color:fn.color }}>{fn.id}</span> {fn.name}</span>
+                        <span className="mono" style={{ color:C.subtle }}>{fnImpl}/{fnCtrls.length}</span>
+                      </div>
+                      <div style={{ height:5,background:"rgba(255,255,255,0.05)",borderRadius:3,overflow:"hidden" }}>
+                        <div style={{ height:"100%",background:fn.color,borderRadius:3,width:`${pct}%`,transition:"width 0.8s ease",opacity:0.85 }}/>
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {/* Framework selector */}
+                <div style={{ marginTop:16,background:C.card,border:`1px solid ${C.border}`,borderRadius:8,padding:12 }}>
+                  <div className="mono" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:8 }}>Frameworks</div>
+                  {[["NIST CSF 2.0","Active",C.cyan],["ISO 27001","Phase 4",C.muted],["SOC 2 Type II","Phase 4",C.muted]].map(([f,s,c])=>(
+                    <div key={f} style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6 }}>
+                      <span style={{ fontSize:12,color:C.text }}>{f}</span>
+                      <span className="mono" style={{ fontSize:10,padding:"2px 6px",borderRadius:3,color:c,background:`${c}18`,border:`1px solid ${c}30` }}>{s}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+          </div>
         </div>
       );
     }
@@ -675,19 +1021,26 @@
             {/* Sidebar */}
             <Sidebar active={sideTab} onChange={setSideTab}/>
 
-            {/* Coming Soon pages for non-dashboard tabs */}
-            {sideTab !== "dashboard" && sideTab !== "alerts" && (
+            {/* Coming Soon pages for non-dashboard/grc tabs */}
+            {sideTab !== "dashboard" && sideTab !== "alerts" && sideTab !== "grc" && (
               <div style={{ flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:16,color:C.muted }}>
                 <svg width="48" height="48" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeWidth="1" d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
                 <div style={{ textAlign:"center" }}>
                   <div className="mono" style={{ fontSize:14,color:C.secondary,marginBottom:6,textTransform:"capitalize" }}>{sideTab}</div>
-                  <div style={{ fontSize:13,color:C.subtle }}>Coming in Phase 3 — GRC Tracker & Incident Management</div>
+                  <div style={{ fontSize:13,color:C.subtle }}>Coming in Phase 4 — Incident Management System</div>
                 </div>
                 <button type="button" onClick={()=>setSideTab("dashboard")} style={{ padding:"8px 20px",background:C.cyanDim,border:`1px solid rgba(34,211,238,0.3)`,borderRadius:6,color:C.cyan,fontSize:12,fontFamily:"IBM Plex Mono",cursor:"pointer" }}>Back to Dashboard</button>
               </div>
             )}
 
-            {/* Dashboard content — only shown when sideTab is dashboard or alerts */}
+            {/* GRC Tracker */}
+            {sideTab === "grc" && (
+              <div style={{ flex:1,overflow:"hidden",display:"flex",flexDirection:"column" }}>
+                <GRCDashboard/>
+              </div>
+            )}
+
+            {/* Dashboard content */}
             {(sideTab === "dashboard" || sideTab === "alerts") && (<>
 
             {/* Alert Queue */}
@@ -765,7 +1118,7 @@
                 </div>
                 <div style={{ marginTop:22,border:`1px solid ${C.border}`,borderRadius:8,padding:12,background:C.card }}>
                   <div className="mono" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:12 }}>Platform Roadmap</div>
-                  {[["Phase 1","Threat Dashboard","LIVE",C.cyan,C.cyanDim],["Phase 2","AI Analyst Agent","LIVE",C.green,C.greenDim],["Phase 3","GRC Tracker","NEXT","#fbbf24","rgba(234,179,8,0.1)"],["Phase 4","Incident Mgmt","SOON",C.subtle,"rgba(255,255,255,0.03)"]].map(([p,n,s,c,b])=>(
+                  {[["Phase 1","Threat Dashboard","LIVE",C.cyan,C.cyanDim],["Phase 2","AI Analyst Agent","LIVE",C.green,C.greenDim],["Phase 3","GRC Tracker","LIVE",C.green,C.greenDim],["Phase 4","Incident Mgmt","NEXT","#fbbf24","rgba(234,179,8,0.1)"]].map(([p,n,s,c,b])=>(
                     <div key={p} style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8 }}>
                       <div style={{ fontSize:12 }}><span className="mono" style={{ color:C.muted }}>{p} </span><span style={{ color:C.secondary }}>{n}</span></div>
                       <span className="mono" style={{ fontSize:11,padding:"2px 8px",borderRadius:4,color:c,background:b,border:`1px solid ${c}40` }}>{s}</span>
