@@ -40,11 +40,12 @@
     .tip-wrap:hover .tip { display:block; }
     .tip { display:none; position:absolute; bottom:calc(100% + 6px); left:50%; transform:translateX(-50%); background:#1a2332; border:1px solid rgba(255,255,255,0.1); color:#94a3b8; font-size:11px; padding:4px 8px; border-radius:4px; white-space:nowrap; z-index:9999; font-family:'IBM Plex Mono',monospace; pointer-events:none; }
     .tip-down { bottom:auto; top:calc(100% + 6px); }
-    .sidebar-btn { width:48px; height:48px; display:flex; align-items:center; justify-content:center; border:none; background:none; cursor:pointer; border-radius:8px; transition:all 0.15s; color:#475569; position:relative; }
+    .sidebar-btn { width:68px; height:52px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; border:none; background:none; cursor:pointer; border-radius:8px; transition:all 0.15s; color:#475569; position:relative; }
     .sidebar-btn:hover { background:rgba(255,255,255,0.06); color:#94a3b8; }
     .sidebar-btn.active { background:rgba(34,211,238,0.1); color:#22d3ee; }
     .sidebar-btn .tip { left:calc(100% + 8px); bottom:auto; top:50%; transform:translateY(-50%); }
-    .sidebar-btn:hover .tip { display:block; }
+    .sidebar-btn .sidebar-label { font-size:9px; font-family:'IBM Plex Mono',monospace; text-transform:uppercase; letter-spacing:0.05em; line-height:1; opacity:0.7; }
+    .sidebar-btn.active .sidebar-label { opacity:1; }
     .mono { font-family:'IBM Plex Mono',monospace; }
     .alert-row-focused { outline: 2px solid rgba(34,211,238,0.5) !important; }
     @keyframes slideIn { from { opacity:0; transform:translateX(20px); } to { opacity:1; transform:translateX(0); } }
@@ -60,6 +61,8 @@
   </style>
 </head>
 <body>
+  <!-- Skip to main content (accessibility) -->
+  <a href="#main-content" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;z-index:9999;background:#0B2545;color:#22d3ee;padding:8px 16px;border-radius:4px;font-family:'IBM Plex Mono',monospace;font-size:13px;text-decoration:none;" onfocus="this.style.left='8px';this.style.top='8px';this.style.width='auto';this.style.height='auto';" onblur="this.style.left='-9999px';">Skip to main content</a>
   <div id="root"></div>
   <script type="text/babel">
     const { useState, useEffect, useRef, useCallback } = React;
@@ -85,6 +88,46 @@
     }
 
     function EB({ children }) { return <ErrorBoundary>{children}</ErrorBoundary>; }
+
+    // ── Onboarding Modal ──────────────────────────────────────────────────────
+    function OnboardingModal({ onClose }) {
+      return (
+        <div role="dialog" aria-modal="true" aria-labelledby="onboard-title" style={{ position:"fixed",inset:0,background:"rgba(0,0,0,0.85)",zIndex:300,display:"flex",alignItems:"center",justifyContent:"center",padding:24 }}>
+          <div style={{ background:C.surface,border:`1px solid ${C.border2}`,borderRadius:14,padding:32,maxWidth:480,width:"100%",boxShadow:"0 32px 80px rgba(0,0,0,0.6)" }}>
+            <div style={{ display:"flex",alignItems:"center",gap:12,marginBottom:20 }}>
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.25C17.25 22.15 21 17.25 21 12V7L12 2z" fill="rgba(0,212,255,0.2)" stroke="#00D4FF" strokeWidth="1.5"/><path d="M9 12l2 2 4-4" stroke="#00D4FF" strokeWidth="1.5" strokeLinecap="round"/></svg>
+              <h1 id="onboard-title" style={{ fontSize:18,fontWeight:700,color:C.bright,margin:0,fontFamily:"DM Sans,sans-serif" }}>Welcome to SentinelIQ</h1>
+            </div>
+            <p style={{ fontSize:13,color:C.secondary,lineHeight:1.75,marginBottom:16 }}>
+              This is a <strong style={{ color:C.bright }}>simulated SOC (Security Operations Center)</strong> portfolio project — a realistic Tier-1 analyst dashboard built to demonstrate cybersecurity engineering skills.
+            </p>
+            <div style={{ display:"flex",flexDirection:"column",gap:8,marginBottom:24 }}>
+              {[
+                ["🔔","Alert Queue","Triage live and simulated alerts with AI-powered analysis"],
+                ["🤖","SOAR Playbooks","Generate step-by-step response playbooks per MITRE tactic"],
+                ["🛡","GRC Tracker","NIST CSF 2.0 compliance tracking across 30 controls"],
+                ["📋","Incident Management","Full incident lifecycle with AI executive summaries"],
+                ["🔍","Threat Hunt","IOC lookup via AbuseIPDB + VirusTotal, MITRE matrix"],
+              ].map(([icon,title,desc])=>(
+                <div key={title} style={{ display:"flex",gap:10,padding:"8px 10px",borderRadius:7,background:C.card,border:`1px solid ${C.border}` }}>
+                  <span style={{ fontSize:14,flexShrink:0 }}>{icon}</span>
+                  <div>
+                    <div style={{ fontSize:12,fontWeight:600,color:C.bright,marginBottom:1 }}>{title}</div>
+                    <div style={{ fontSize:11,color:C.subtle }}>{desc}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center" }}>
+              <span style={{ fontSize:11,color:C.muted }}>Built by <a href="https://mmohamud.me" target="_blank" style={{ color:C.cyan,textDecoration:"none" }}>Mohamed Mohamud</a> · Security+ · MS Business Analytics</span>
+              <button type="button" onClick={onClose} style={{ padding:"9px 24px",background:C.cyanDim,border:`1px solid rgba(34,211,238,0.4)`,borderRadius:7,color:C.cyan,fontSize:13,fontFamily:"IBM Plex Mono",cursor:"pointer",fontWeight:600 }}>
+                Enter Platform →
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
 
     // ── Config ────────────────────────────────────────────────────────────────
     // Supabase anon key is intentionally public-facing (read-only, rate-limited)
@@ -277,26 +320,26 @@
     // ── Left Sidebar ──────────────────────────────────────────────────────────
     function Sidebar({ active, onChange }) {
       const items = [
-        { id:"dashboard", tip:"Dashboard",   icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M9 22V12h6v10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg> },
-        { id:"alerts",    tip:"Alert Queue", icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg> },
-        { id:"incidents", tip:"Incidents",   icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M14 2v6h6M12 18v-6M9 15h6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg> },
-        { id:"grc",       tip:"GRC Tracker", icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.25C17.25 22.15 21 17.25 21 12V7L12 2z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M9 12l2 2 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg> },
-        { id:"hunt",      tip:"Threat Hunt", icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="1.5"/><path d="M21 21l-4.35-4.35" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg> },
-        { id:"reports",   tip:"Reports",     icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M9 17H7A5 5 0 017 7h2M15 7h2a5 5 0 010 10h-2M8 12h8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg> },
-        { id:"settings",  tip:"Settings",    icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.5"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" stroke="currentColor" strokeWidth="1.5"/></svg> },
+        { id:"dashboard", tip:"Dashboard",   short:"Home",     icon:<svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M9 22V12h6v10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg> },
+        { id:"alerts",    tip:"Alert Queue", short:"Alerts",   icon:<svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg> },
+        { id:"incidents", tip:"Incidents",   short:"Incidents",icon:<svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M14 2v6h6M12 18v-6M9 15h6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg> },
+        { id:"grc",       tip:"GRC Tracker", short:"GRC",      icon:<svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.25C17.25 22.15 21 17.25 21 12V7L12 2z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M9 12l2 2 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg> },
+        { id:"hunt",      tip:"Threat Hunt", short:"Hunt",     icon:<svg width="17" height="17" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="1.5"/><path d="M21 21l-4.35-4.35" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg> },
+        { id:"reports",   tip:"Reports",     short:"Reports",  icon:<svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M9 17H7A5 5 0 017 7h2M15 7h2a5 5 0 010 10h-2M8 12h8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg> },
+        { id:"settings",  tip:"Settings",    short:"Settings", icon:<svg width="17" height="17" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.5"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" stroke="currentColor" strokeWidth="1.5"/></svg> },
       ];
       return (
-        <div style={{ width:48,background:C.surface,borderRight:`1px solid ${C.border}`,display:"flex",flexDirection:"column",alignItems:"center",paddingTop:8,paddingBottom:8,gap:4,flexShrink:0 }}>
+        <nav aria-label="Main navigation" style={{ width:72,background:C.surface,borderRight:`1px solid ${C.border}`,display:"flex",flexDirection:"column",alignItems:"center",paddingTop:8,paddingBottom:8,gap:2,flexShrink:0 }}>
           <div style={{ width:32,height:32,display:"flex",alignItems:"center",justifyContent:"center",marginBottom:8 }}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.25C17.25 22.15 21 17.25 21 12V7L12 2z" fill="rgba(0,212,255,0.2)" stroke="#00D4FF" strokeWidth="1.5"/><path d="M9 12l2 2 4-4" stroke="#00D4FF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
           </div>
           {items.map(item=>(
-            <button key={item.id} type="button" onClick={()=>onChange(item.id)} className={`sidebar-btn${active===item.id?" active":""}`} aria-label={item.tip}>
+            <button key={item.id} type="button" onClick={()=>onChange(item.id)} className={`sidebar-btn${active===item.id?" active":""}`} aria-label={item.tip} title={item.tip}>
               {item.icon}
-              <span className="tip">{item.tip}</span>
+              <span className="sidebar-label">{item.short}</span>
             </button>
           ))}
-        </div>
+        </nav>
       );
     }
 
@@ -422,7 +465,14 @@
           });
           const data = await res.json();
           if (!res.ok || data.error) throw new Error(data.error||"Edge function error");
-          setAiOutput(data.summary || "Summary generated.");
+          // Try to parse structured JSON
+          let parsed = null;
+          try {
+            const raw = data.summary || "";
+            const s = raw.indexOf("{"), e = raw.lastIndexOf("}");
+            if (s >= 0 && e > s) parsed = JSON.parse(raw.slice(s, e+1));
+          } catch {}
+          setAiOutput(parsed || data.summary || "Summary generated.");
           setAiStatus("done");
         } catch(e) { setAiOutput(e.message); setAiStatus("error"); }
       };
@@ -465,7 +515,8 @@
               <div style={{ padding:"8px",borderBottom:`1px solid ${C.border}`,flexShrink:0,display:"flex",flexDirection:"column",gap:6 }}>
                 <div style={{ position:"relative" }}>
                   <svg style={{ position:"absolute",left:8,top:"50%",transform:"translateY(-50%)",pointerEvents:"none" }} width="12" height="12" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="8" stroke={C.subtle} strokeWidth="2"/><path d="M21 21l-4.35-4.35" stroke={C.subtle} strokeWidth="2" strokeLinecap="round"/></svg>
-                  <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search incidents..."
+                  <label htmlFor="incident-search" style={{ position:"absolute",width:1,height:1,overflow:"hidden",clip:"rect(0,0,0,0)",whiteSpace:"nowrap" }}>Search incidents</label>
+                  <input id="incident-search" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search incidents..."
                     style={{ width:"100%",background:C.card,border:`1px solid ${C.border}`,borderRadius:5,padding:"5px 8px 5px 24px",fontSize:12,color:C.bright,fontFamily:"DM Sans,sans-serif" }}/>
                 </div>
                 <div style={{ display:"flex",gap:4,flexWrap:"wrap" }}>
@@ -616,8 +667,53 @@
                           ))}
                         </div>
                       )}
-                      {aiStatus==="done" && aiOutput && <div style={{ borderRadius:7,border:`1px solid rgba(167,139,250,0.2)`,background:C.purpleDim,padding:12,fontSize:12,color:C.text,lineHeight:1.75 }}>{aiOutput}</div>}
-                      {aiStatus==="error" && <div style={{ borderRadius:7,border:"1px solid rgba(239,68,68,0.3)",background:"rgba(239,68,68,0.05)",padding:11,fontSize:12,color:"#f87171" }}>Error: {aiOutput}</div>}
+                      {aiStatus==="done" && aiOutput && (
+                        <div className="fade-in" style={{ display:"flex",flexDirection:"column",gap:8 }}>
+                          {typeof aiOutput === "object" ? <>
+                            <div style={{ display:"grid",gridTemplateColumns:"80px 1fr",gap:8 }}>
+                              <div style={{ borderRadius:7,border:`1px solid rgba(167,139,250,0.2)`,background:C.purpleDim,padding:10,textAlign:"center" }}>
+                                <div style={{ fontSize:9,color:C.subtle,marginBottom:4 }}>RISK</div>
+                                <div className="mono" style={{ fontSize:13,fontWeight:700,color:({CRITICAL:"#f87171",HIGH:"#fb923c",MEDIUM:"#fbbf24",LOW:"#4ade80"})[aiOutput.risk_level]||C.purple }}>{aiOutput.risk_level||"—"}</div>
+                              </div>
+                              <div style={{ borderRadius:7,border:`1px solid ${C.border}`,background:C.surface,padding:10 }}>
+                                <div style={{ fontSize:10,color:C.subtle,marginBottom:4 }}>STATUS</div>
+                                <div style={{ fontSize:12,color:C.text,lineHeight:1.5 }}>{aiOutput.status_line}</div>
+                              </div>
+                            </div>
+                            {aiOutput.impact && (
+                              <div style={{ borderRadius:7,border:`1px solid rgba(239,68,68,0.2)`,background:"rgba(239,68,68,0.05)",padding:10 }}>
+                                <div style={{ fontSize:10,color:"#f87171",marginBottom:4 }}>BUSINESS IMPACT</div>
+                                <div style={{ fontSize:12,color:C.text,lineHeight:1.5 }}>{aiOutput.impact}</div>
+                              </div>
+                            )}
+                            {Array.isArray(aiOutput.actions_taken) && aiOutput.actions_taken.length > 0 && (
+                              <div style={{ borderRadius:7,border:`1px solid ${C.border}`,background:C.card,padding:10 }}>
+                                <div style={{ fontSize:10,color:"#4ade80",marginBottom:6 }}>ACTIONS TAKEN</div>
+                                {aiOutput.actions_taken.map((a,i)=>(
+                                  <div key={i} style={{ display:"flex",gap:6,marginBottom:5,fontSize:11,color:C.text }}>
+                                    <span style={{ color:"#4ade80",flexShrink:0 }}>✓</span>{a}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                            {Array.isArray(aiOutput.next_steps) && aiOutput.next_steps.length > 0 && (
+                              <div style={{ borderRadius:7,border:`1px solid rgba(167,139,250,0.2)`,background:C.purpleDim,padding:10 }}>
+                                <div style={{ fontSize:10,color:C.purple,marginBottom:6 }}>NEXT STEPS</div>
+                                {aiOutput.next_steps.map((s,i)=>(
+                                  <div key={i} style={{ display:"flex",gap:6,marginBottom:5,fontSize:11,color:C.text }}>
+                                    <span className="mono" style={{ color:C.purple,flexShrink:0 }}>{i+1}.</span>{s}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </> : (
+                            <div style={{ borderRadius:7,border:`1px solid rgba(167,139,250,0.2)`,background:C.purpleDim,padding:12,fontSize:12,color:C.text,lineHeight:1.75 }}>
+                              {String(aiOutput).replace(/#{1,3}\s*/g,"").replace(/\*\*/g,"")}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      {aiStatus==="error" && <div style={{ borderRadius:7,border:"1px solid rgba(239,68,68,0.3)",background:"rgba(239,68,68,0.05)",padding:11,fontSize:12,color:"#f87171" }}>Error: {String(aiOutput)}</div>}
                     </div>
 
                   </div>
@@ -1065,6 +1161,10 @@
 
       const generateSummary = async () => {
         setAiStatus("loading"); setParsed(null); setErrMsg("");
+        const timeout = setTimeout(()=>{
+          setErrMsg("Request timed out. The AI service may be busy — try again.");
+          setAiStatus("error");
+        }, 12000);
         try {
           const payload = {
             weeklySummary: {
@@ -1095,7 +1195,8 @@
           setParsed(result);
           setGenTime(new Date());
           setAiStatus("done");
-        } catch(e) { setErrMsg(e.message); setAiStatus("error"); }
+        } catch(e) { clearTimeout(timeout); setErrMsg(e.message); setAiStatus("error"); return; }
+        clearTimeout(timeout);
       };
 
       const copyToClipboard = () => {
@@ -1213,7 +1314,7 @@
             </div>
             <div style={{ display:"flex",gap:8 }}>
               <button type="button" style={{ padding:"7px 16px",background:C.cyanDim,border:`1px solid rgba(34,211,238,0.3)`,borderRadius:6,color:C.cyan,fontSize:12,fontFamily:"IBM Plex Mono",cursor:"pointer" }} onClick={()=>alert("PDF export coming in v3.0")}>Export PDF</button>
-              <button type="button" style={{ padding:"7px 16px",background:"rgba(255,255,255,0.04)",border:`1px solid ${C.border}`,borderRadius:6,color:C.subtle,fontSize:12,fontFamily:"IBM Plex Mono",cursor:"pointer" }} onClick={()=>alert("CSV export coming in v3.0")}>Export CSV</button>
+              <button type="button" title="CSV export coming in v3.0 — backend persistence required" style={{ padding:"7px 16px",background:"rgba(255,255,255,0.03)",border:`1px solid ${C.border}`,borderRadius:6,color:C.muted,fontSize:12,fontFamily:"IBM Plex Mono",cursor:"not-allowed",opacity:0.5 }}>Export CSV</button>
             </div>
           </div>
 
@@ -1669,6 +1770,12 @@
 
       return (
         <div style={{ display:"flex",flexDirection:"column",height:"100%",overflow:"hidden" }}>
+
+          {/* Session-only banner */}
+          <div style={{ padding:"6px 16px",background:"rgba(234,179,8,0.08)",borderBottom:`1px solid rgba(234,179,8,0.2)`,display:"flex",alignItems:"center",gap:8,flexShrink:0 }}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" stroke="#fbbf24" strokeWidth="1.5" strokeLinecap="round"/></svg>
+            <span style={{ fontSize:11,color:"#fbbf24",fontFamily:"IBM Plex Mono" }}>Demo mode — status changes are session-only and reset on page refresh. Backend persistence coming in v3.0.</span>
+          </div>
 
           {/* GRC Header Stats */}
           <div style={{ padding:"12px 16px",borderBottom:`1px solid ${C.border}`,display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8,flexShrink:0 }}>
@@ -2242,7 +2349,8 @@
             <span className="mono" style={{ fontSize:10,color:C.muted,background:C.card,border:`1px solid ${C.border}`,padding:"2px 6px",borderRadius:4 }}>AbuseIPDB · VirusTotal</span>
           </div>
           <div style={{ display:"flex",gap:8 }}>
-            <input value={q} onChange={e=>setQ(e.target.value)} onKeyDown={e=>e.key==="Enter"&&go()} placeholder="IP, SHA256, domain..."
+            <label htmlFor="ioc-input" style={{ display:"block",fontSize:11,color:C.subtle,marginBottom:4 }}>Indicator (IP, hash, or domain)</label>
+          <input id="ioc-input" value={q} onChange={e=>setQ(e.target.value)} onKeyDown={e=>e.key==="Enter"&&go()} placeholder="IP, SHA256, domain..."
               aria-label="IOC Lookup input"
               style={{ flex:1,background:C.card,border:`1px solid ${C.border}`,borderRadius:6,padding:"8px 12px",fontSize:13,color:C.bright,fontFamily:"IBM Plex Mono" }}/>
             <button type="button" onClick={go} disabled={loading} style={{ padding:"8px 16px",background:C.cyanDim,border:`1px solid rgba(34,211,238,0.3)`,borderRadius:6,color:C.cyan,fontSize:11,fontFamily:"IBM Plex Mono",cursor:"pointer" }}>
@@ -2312,8 +2420,10 @@
       const [tab,       setTab]       = useState("alerts");
       const [time,      setTime]      = useState(new Date());
       const [sideTab,   setSideTab]   = useState("dashboard");
-      const [showAbout, setShowAbout] = useState(false);
-      const [showKeys,  setShowKeys]  = useState(false);
+      const [showAbout,    setShowAbout]    = useState(false);
+      const [showKeys,     setShowKeys]     = useState(false);
+      const [showOnboard,  setShowOnboard]  = useState(()=>!localStorage.getItem("siq_onboarded"));
+      const closeOnboard = () => { localStorage.setItem("siq_onboarded","1"); setShowOnboard(false); };
       const [search,    setSearch]    = useState("");
       const [filter,    setFilter]    = useState(null);
       const [toast,     setToast]     = useState(null);
@@ -2515,6 +2625,7 @@
       return (
         <div style={{ height:"100vh",overflow:"hidden",background:C.bg,color:C.text,display:"flex",flexDirection:"column",backgroundImage:"radial-gradient(ellipse at top left,rgba(0,180,255,0.04) 0%,transparent 50%),radial-gradient(ellipse at bottom right,rgba(167,139,250,0.03) 0%,transparent 50%)" }}>
 
+          {showOnboard && <OnboardingModal onClose={closeOnboard}/>}
           {showAbout && <AboutModal onClose={()=>setShowAbout(false)}/>}
           {showKeys  && <ShortcutsModal/>}
           {toast && <Toast msg={toast} onClose={()=>setToast(null)}/>}
@@ -2522,7 +2633,7 @@
           {/* Header */}
           <header style={{ height:HEADER_H,borderBottom:`1px solid ${C.border}`,padding:"0 20px",display:"flex",alignItems:"center",justifyContent:"space-between",background:"rgba(8,13,20,0.9)",backdropFilter:"blur(8px)",flexShrink:0,zIndex:50,gap:12 }}>
             <div style={{ display:"flex",alignItems:"center",gap:12,flexShrink:0 }}>
-              <span className="mono" style={{ fontSize:14,fontWeight:700,letterSpacing:"0.08em",color:C.cyan,whiteSpace:"nowrap" }}>SENTINEL<span style={{ color:C.bright }}>IQ</span></span>
+              <h1 style={{ margin:0,fontSize:14,fontWeight:700,letterSpacing:"0.08em",color:C.cyan,whiteSpace:"nowrap",fontFamily:"IBM Plex Mono,monospace" }}>SENTINEL<span style={{ color:C.bright }}>IQ</span></h1>
               <span className="header-title-sub" style={{ fontSize:11,color:C.muted,whiteSpace:"nowrap" }}>SOC Platform v2.0</span>
               <span style={{ fontSize:11,fontFamily:"IBM Plex Mono",padding:"2px 8px",borderRadius:4,background:`${threatColor}18`,border:`1px solid ${threatColor}40`,color:threatColor,whiteSpace:"nowrap" }}>● {threatLevel}</span>
             </div>
@@ -2567,8 +2678,8 @@
           </div>
           )}
 
-          {/* Main Layout */}
-          <div style={{ flex:1,minHeight:0,display:"flex",overflow:"hidden" }}>
+          {/* Main content */}
+          <main id="main-content" style={{ flex:1,minHeight:0,display:"flex",overflow:"hidden" }}>
 
             {/* Sidebar */}
             <Sidebar active={sideTab} onChange={setSideTab}/>
@@ -2609,7 +2720,8 @@
                 <div style={{ display:"flex",gap:6,alignItems:"center" }}>
                   <div style={{ position:"relative",flex:1 }}>
                     <svg style={{ position:"absolute",left:8,top:"50%",transform:"translateY(-50%)",pointerEvents:"none" }} width="11" height="11" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="8" stroke={C.muted} strokeWidth="2"/><path d="M21 21l-4.35-4.35" stroke={C.muted} strokeWidth="2" strokeLinecap="round"/></svg>
-                    <input ref={searchRef} value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search alerts..."
+                    <label htmlFor="alert-search" style={{ position:"absolute",width:1,height:1,overflow:"hidden",clip:"rect(0,0,0,0)",whiteSpace:"nowrap" }}>Search alerts</label>
+                    <input id="alert-search" ref={searchRef} value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search alerts..."
                       aria-label="Search alerts"
                       style={{ width:"100%",background:C.card,border:`1px solid ${C.border}`,borderRadius:5,padding:"5px 8px 5px 26px",fontSize:12,color:C.bright,fontFamily:"DM Sans,sans-serif" }}/>
                   </div>
@@ -2779,7 +2891,7 @@
             </div>
 
             </>)}
-          </div>
+          </main>
         </div>
       );
     }
