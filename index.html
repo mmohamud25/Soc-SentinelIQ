@@ -2002,6 +2002,123 @@
       );
     }
 
+    // ── SOAR Playbook ─────────────────────────────────────────────────────────
+    const PHASE_COLOR = { Contain:"#f87171", Investigate:"#fbbf24", Eradicate:"#fb923c", Recover:"#4ade80", Report:C.cyan };
+
+    function SOARPlaybook({ alert }) {
+      const [status,   setStatus]   = useState("idle");
+      const [playbook, setPlaybook] = useState(null);
+      const [steps,    setSteps]    = useState({});
+      const [errMsg,   setErrMsg]   = useState("");
+      useEffect(()=>{ setStatus("idle"); setPlaybook(null); setSteps({}); setErrMsg(""); },[alert?.id]);
+
+      const generate = async () => {
+        setStatus("loading");
+        try {
+          const res = await fetch(SUPABASE_URL, {
+            method:"POST", headers:sbHeaders(),
+            body:JSON.stringify({ playbookRequest: {
+              id:alert.id, severity:alert.severity, title:alert.title,
+              tactic:alert.tactic, asset:alert.asset, ip:alert.ip,
+              source:alert.source, description:alert.description
+            }})
+          });
+          const data = await res.json();
+          if (!res.ok||data.error) throw new Error(data.error||"Error");
+          setPlaybook(data.playbook);
+          const init = {};
+          data.playbook?.steps?.forEach(s=>{ init[s.id]=false; });
+          setSteps(init);
+          setStatus("done");
+        } catch(e) { setErrMsg(e.message); setStatus("error"); }
+      };
+
+      const completed = Object.values(steps).filter(Boolean).length;
+      const total     = playbook?.steps?.length||0;
+      const pct       = total ? Math.round((completed/total)*100) : 0;
+
+      return (
+        <div style={{ marginTop:16,borderTop:`1px solid ${C.border}`,paddingTop:16 }}>
+          <div style={{ display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12 }}>
+            <div style={{ display:"flex",alignItems:"center",gap:8 }}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M9 11l3 3L22 4" stroke="#4ade80" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" stroke="#4ade80" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              <span className="mono" style={{ fontSize:11,color:"#4ade80",textTransform:"uppercase",letterSpacing:"0.1em" }}>SOAR Playbook</span>
+              {status==="loading" && <Spinner/>}
+              {status==="done" && <span style={{ fontSize:10,color:C.subtle }}>{completed}/{total} steps complete</span>}
+            </div>
+            {status==="idle" &&
+              <button type="button" onClick={generate} style={{ padding:"5px 12px",borderRadius:5,fontSize:11,fontFamily:"IBM Plex Mono",cursor:"pointer",background:"rgba(74,222,128,0.1)",border:"1px solid rgba(74,222,128,0.3)",color:"#4ade80",display:"flex",alignItems:"center",gap:5 }}>
+                <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21"/></svg>
+                Generate Playbook
+              </button>
+            }
+            {status==="done" && <button type="button" onClick={()=>{setStatus("idle");setPlaybook(null);}} style={{ padding:"5px 12px",borderRadius:5,fontSize:11,background:"none",border:`1px solid ${C.border}`,color:C.subtle,cursor:"pointer",fontFamily:"IBM Plex Mono" }}>Clear</button>}
+          </div>
+
+          {status==="idle" && <div style={{ borderRadius:7,border:"1px solid rgba(74,222,128,0.15)",background:"rgba(74,222,128,0.05)",padding:11,fontSize:12,color:C.subtle }}>Generate a step-by-step response playbook for this alert based on the MITRE tactic and severity.</div>}
+          {status==="loading" && (
+            <div style={{ borderRadius:7,border:"1px solid rgba(74,222,128,0.2)",background:"rgba(74,222,128,0.05)",padding:12,display:"flex",flexDirection:"column",gap:8 }}>
+              {["Identifying MITRE technique...","Mapping response phases...","Generating step-by-step playbook..."].map((s,i)=>(
+                <div key={i} className="pulse mono" style={{ display:"flex",alignItems:"center",gap:8,fontSize:12,color:C.subtle,animationDelay:`${i*0.3}s` }}>
+                  <span style={{ width:5,height:5,borderRadius:"50%",background:"#4ade80",display:"inline-block" }}/>{s}
+                </div>
+              ))}
+            </div>
+          )}
+          {status==="error" && <div style={{ borderRadius:7,border:"1px solid rgba(239,68,68,0.3)",background:"rgba(239,68,68,0.05)",padding:11,fontSize:12,color:"#f87171" }}>{errMsg}</div>}
+          {status==="done" && playbook && (
+            <div className="fade-in">
+              {/* Header */}
+              <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10 }}>
+                <div>
+                  <div style={{ fontSize:13,fontWeight:600,color:C.bright }}>{playbook.playbook_name}</div>
+                  <div style={{ fontSize:11,color:C.subtle,marginTop:2 }}>Est. {playbook.estimated_time} · {total} steps</div>
+                </div>
+                <div style={{ textAlign:"right" }}>
+                  <div className="mono" style={{ fontSize:18,fontWeight:700,color:pct===100?"#4ade80":"#fbbf24" }}>{pct}%</div>
+                  <div style={{ fontSize:10,color:C.subtle }}>complete</div>
+                </div>
+              </div>
+              {/* Progress bar */}
+              <div style={{ height:4,background:"rgba(255,255,255,0.05)",borderRadius:2,overflow:"hidden",marginBottom:12 }}>
+                <div style={{ height:"100%",background:pct===100?"#4ade80":"#fbbf24",borderRadius:2,width:`${pct}%`,transition:"width 0.4s ease" }}/>
+              </div>
+              {/* Steps */}
+              {playbook.steps?.map(step=>{
+                const done = steps[step.id];
+                const pc = PHASE_COLOR[step.phase]||C.cyan;
+                return (
+                  <button key={step.id} type="button" onClick={()=>setSteps(prev=>({...prev,[step.id]:!prev[step.id]}))}
+                    style={{ width:"100%",textAlign:"left",padding:"10px 12px",borderRadius:7,marginBottom:6,border:`1px solid ${done?"rgba(74,222,128,0.25)":C.border}`,background:done?"rgba(74,222,128,0.05)":"rgba(255,255,255,0.02)",cursor:"pointer",transition:"all 0.15s" }}>
+                    <div style={{ display:"flex",alignItems:"flex-start",gap:10 }}>
+                      <div style={{ width:18,height:18,borderRadius:"50%",border:`1px solid ${done?"#4ade80":C.border}`,background:done?"#4ade80":"none",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,marginTop:1,transition:"all 0.2s" }}>
+                        {done && <svg width="10" height="10" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="#000" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+                      </div>
+                      <div style={{ flex:1,minWidth:0 }}>
+                        <div style={{ display:"flex",alignItems:"center",gap:6,marginBottom:3 }}>
+                          <span style={{ fontSize:9,fontFamily:"IBM Plex Mono",padding:"1px 5px",borderRadius:3,color:pc,background:`${pc}18`,border:`1px solid ${pc}30` }}>{step.phase.toUpperCase()}</span>
+                          <span style={{ fontSize:10,color:C.subtle }}>Step {step.id}</span>
+                          {step.tool && <span className="mono" style={{ fontSize:9,color:C.muted }}>via {step.tool}</span>}
+                        </div>
+                        <div style={{ fontSize:12,color:done?C.subtle:C.bright,textDecoration:done?"line-through":"none",lineHeight:1.4,transition:"color 0.2s" }}>{step.action}</div>
+                        {step.details && !done && <div style={{ fontSize:11,color:C.subtle,marginTop:3,lineHeight:1.5 }}>{step.details}</div>}
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+              {pct===100 && (
+                <div style={{ borderRadius:7,border:"1px solid rgba(74,222,128,0.3)",background:"rgba(74,222,128,0.08)",padding:11,textAlign:"center" }}>
+                  <div style={{ fontSize:13,color:"#4ade80",fontWeight:600 }}>✓ Playbook Complete</div>
+                  <div style={{ fontSize:11,color:C.subtle,marginTop:3 }}>All response steps completed — document in incident timeline</div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      );
+    }
+
     // ── AlertRow ──────────────────────────────────────────────────────────────
     function AlertRow({ alert, onClick, selected, timeStr }) {
       const s  = SEV[alert.severity];
@@ -2029,7 +2146,10 @@
             </div>
           </div>
           <div style={{ fontSize:13,color:C.bright,fontWeight:500,lineHeight:1.3 }}>{alert.title}</div>
-          <div style={{ fontSize:11,color:C.subtle,marginTop:4 }}>{alert.asset} · {alert.source}</div>
+          <div style={{ fontSize:11,color:C.subtle,marginTop:4,display:"flex",alignItems:"center",gap:6 }}>
+            {alert.live && <span className="mono" style={{ fontSize:9,padding:"1px 5px",borderRadius:3,color:"#4ade80",background:"rgba(74,222,128,0.1)",border:"1px solid rgba(74,222,128,0.3)" }}>LIVE</span>}
+            <span>{alert.asset} · {alert.source}</span>
+          </div>
         </button>
       );
     }
@@ -2081,6 +2201,7 @@
             <div style={{ fontSize:12,color:C.secondary,lineHeight:1.75 }}>{alert.description}</div>
           </div>
           <AIAnalyst alert={alert}/>
+          <SOARPlaybook alert={alert}/>
         </div>
       );
     }
@@ -2161,6 +2282,7 @@
       const [filter,    setFilter]    = useState(null);
       const [toast,     setToast]     = useState(null);
       const [alerts,    setAlerts]    = useState(ALERTS_RAW);
+      const [dbReady,   setDbReady]   = useState(false);
       const [activity]              = useState([
         { id:"ALT-002", msg:"moved to Investigating", offsetMs:8*60*1000  },
         { id:"ALT-001", msg:"AI analysis completed",  offsetMs:11*60*1000 },
@@ -2169,6 +2291,87 @@
         { id:"ALT-004", msg:"brute force threshold",  offsetMs:22*60*1000 },
       ]);
       const searchRef = useRef(null);
+
+      // ── Load alerts from Supabase on mount ──────────────────────────────────
+      useEffect(()=>{
+        (async ()=>{
+          try {
+            const res = await fetch(
+              `https://xkadqvmqxdyqoddiypet.supabase.co/rest/v1/soc_alerts?select=*&order=created_at.desc&limit=50`,
+              { headers:{ apikey:SUPABASE_ANON, Authorization:`Bearer ${SUPABASE_ANON}` } }
+            );
+            if (!res.ok) throw new Error("Table not found");
+            const rows = await res.json();
+            if (Array.isArray(rows) && rows.length > 0) {
+              const mapped = rows.map(r=>({
+                id:r.id, title:r.title, severity:r.severity, status:r.status,
+                source:r.source||"SIEM", asset:r.asset||"—", ip:r.ip||"—",
+                tactic:r.tactic||"Unknown", description:r.description||"",
+                offsetMs:Number(r.offset_ms)||0, live:r.live||false
+              }));
+              setAlerts(mapped);
+              setSel(mapped[0]);
+            } else {
+              // Seed Supabase with mock alerts
+              await seedAlertsToDb(ALERTS_RAW);
+            }
+            setDbReady(true);
+          } catch {
+            setDbReady(false); // fall back to mock data silently
+          }
+        })();
+      },[]);
+
+      // ── Seed helper ──────────────────────────────────────────────────────────
+      const seedAlertsToDb = async (alertList) => {
+        try {
+          await fetch(
+            `https://xkadqvmqxdyqoddiypet.supabase.co/rest/v1/soc_alerts`,
+            {
+              method:"POST",
+              headers:{ apikey:SUPABASE_ANON, Authorization:`Bearer ${SUPABASE_ANON}`, "Content-Type":"application/json", Prefer:"resolution=merge-duplicates" },
+              body: JSON.stringify(alertList.map(a=>({ id:a.id, title:a.title, severity:a.severity, status:a.status, source:a.source, asset:a.asset, ip:a.ip, tactic:a.tactic, description:a.description, offset_ms:a.offsetMs, live:false })))
+            }
+          );
+        } catch {}
+      };
+
+      // ── Persist triage to Supabase ────────────────────────────────────────
+      const persistTriage = async (alertId, newStatus) => {
+        if (!dbReady) return;
+        try {
+          await fetch(
+            `https://xkadqvmqxdyqoddiypet.supabase.co/rest/v1/soc_alerts?id=eq.${alertId}`,
+            {
+              method:"PATCH",
+              headers:{ apikey:SUPABASE_ANON, Authorization:`Bearer ${SUPABASE_ANON}`, "Content-Type":"application/json" },
+              body: JSON.stringify({ status:newStatus })
+            }
+          );
+        } catch {}
+      };
+
+      // ── Fetch live OTX alerts ─────────────────────────────────────────────
+      useEffect(()=>{
+        (async ()=>{
+          try {
+            const res = await fetch(`${SUPABASE_URL}?action=otx`,{ headers:sbHeaders() });
+            if (!res.ok) return;
+            const data = await res.json();
+            if (!Array.isArray(data.alerts)||!data.alerts.length) return;
+            setAlerts(prev=>{
+              const existing = new Set(prev.map(a=>a.id));
+              const fresh = data.alerts.filter(a=>!existing.has(a.id));
+              if (!fresh.length) return prev;
+              const merged = [...fresh,...prev];
+              setToast(`${fresh.length} live alert${fresh.length>1?"s":""} from OTX`);
+              setSel(s=>s||merged[0]);
+              if (dbReady) seedAlertsToDb(fresh);
+              return merged;
+            });
+          } catch {}
+        })();
+      },[dbReady]);
 
       useEffect(()=>{ const t=setInterval(()=>setTime(new Date()),1000); return()=>clearInterval(t); },[]);
 
@@ -2203,13 +2406,22 @@
         if (action === "Investigate") {
           setAlerts(prev => prev.map(a => a.id===alert.id ? {...a, status:"Investigating"} : a));
           setSel(prev => prev?.id===alert.id ? {...prev, status:"Investigating"} : prev);
+          persistTriage(alert.id, "Investigating");
           setToast(`${alert.id} → Investigating`);
         } else if (action === "Close") {
           setAlerts(prev => prev.map(a => a.id===alert.id ? {...a, status:"Closed"} : a));
           setSel(prev => prev?.id===alert.id ? {...prev, status:"Closed"} : prev);
+          persistTriage(alert.id, "Closed");
           setToast(`${alert.id} closed`);
+        } else if (action === "Escalate") {
+          setAlerts(prev => prev.map(a => a.id===alert.id ? {...a, status:"Escalated"} : a));
+          setSel(prev => prev?.id===alert.id ? {...prev, status:"Escalated"} : prev);
+          persistTriage(alert.id, "Escalated");
+          setToast(`${alert.id} → Escalated`);
+        } else if (action === "Assign") {
+          setToast(`${alert.id} assigned to M. Mohamud`);
         } else {
-          setToast(`${alert.id} — ${action} coming in Phase 4`);
+          setToast(`${alert.id} — ${action}`);
         }
       };
 
@@ -2288,6 +2500,10 @@
               <div style={{ display:"flex",alignItems:"center",gap:5,flexShrink:0 }}>
                 <Dot live={true} tip="AI Analyst active via Supabase"/>
                 <span className="feed-label" style={{ fontSize:11,color:C.green }}>AI Analyst</span>
+              </div>
+              <div style={{ display:"flex",alignItems:"center",gap:5,flexShrink:0 }}>
+                <Dot live={dbReady} tip={dbReady?"Alert persistence active":"Using local data"}/>
+                <span className="feed-label" style={{ fontSize:11,color:dbReady?C.green:"#fbbf24" }}>Supabase</span>
               </div>
             </div>
             <div style={{ display:"flex",alignItems:"center",gap:10,flexShrink:0 }}>
