@@ -6,7 +6,6 @@ I built this because I wanted a portfolio project that actually reflects what se
 
 SentinelIQ is a SOC platform. It pulls live threat intelligence, lets you triage alerts with AI assistance, generates SOAR response playbooks, tracks NIST CSF 2.0 compliance, and manages incidents from detection to closure. Everything runs off a single HTML file and a Supabase Edge Function.
 
----
 
 ## Why I built it this way
 
