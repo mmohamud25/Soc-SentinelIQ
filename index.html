@@ -223,12 +223,12 @@
     }
 
     // ── Primitives ────────────────────────────────────────────────────────────
-    function Dot({ live, tip }) {
+    function Dot({ live, tip, tipDown=false }) {
       return (
         <span className="tip-wrap" style={{ position:"relative",display:"inline-flex",width:10,height:10 }}>
           <span className="ping" style={{ position:"absolute",inset:0,borderRadius:"50%",background:live?"#22c55e":"#eab308",opacity:0.45 }}/>
           <span style={{ position:"relative",width:8,height:8,borderRadius:"50%",margin:1,background:live?"#22c55e":"#eab308" }}/>
-          {tip && <span className="tip">{tip}</span>}
+          {tip && <span className={`tip${tipDown?" tip-down":""}`}>{tip}</span>}
         </span>
       );
     }
@@ -333,7 +333,7 @@
     }
 
     // ── Left Sidebar ──────────────────────────────────────────────────────────
-    function Sidebar({ active, onChange }) {
+    function Sidebar({ active, onChange, mode="expanded" }) {
       const items = [
         { id:"dashboard", tip:"Dashboard",   short:"Home",    icon:<svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M9 22V12h6v10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg> },
         { id:"alerts",    tip:"Alert Queue", short:"Alerts",  icon:<svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg> },
@@ -343,15 +343,17 @@
         { id:"reports",   tip:"Reports",     short:"Reports", icon:<svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M9 17H7A5 5 0 017 7h2M15 7h2a5 5 0 010 10h-2M8 12h8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg> },
         { id:"settings",  tip:"Settings",    short:"Config",  icon:<svg width="17" height="17" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.5"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" stroke="currentColor" strokeWidth="1.5"/></svg> },
       ];
+      const collapsed = mode === "collapsed";
       return (
-        <nav aria-label="Main navigation" style={{ width:72,background:C.surface,borderRight:`1px solid ${C.border}`,display:"flex",flexDirection:"column",alignItems:"center",paddingTop:8,paddingBottom:8,gap:2,flexShrink:0 }}>
+        <nav aria-label="Main navigation" style={{ width:collapsed?48:72,background:C.surface,borderRight:`1px solid ${C.border}`,display:"flex",flexDirection:"column",alignItems:"center",paddingTop:8,paddingBottom:8,gap:2,flexShrink:0,transition:"width 0.2s ease",overflow:"hidden" }}>
           <div style={{ width:32,height:32,display:"flex",alignItems:"center",justifyContent:"center",marginBottom:8 }}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.25C17.25 22.15 21 17.25 21 12V7L12 2z" fill="rgba(0,212,255,0.2)" stroke="#00D4FF" strokeWidth="1.5"/><path d="M9 12l2 2 4-4" stroke="#00D4FF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
           </div>
           {items.map(item=>(
-            <button key={item.id} type="button" onClick={()=>onChange(item.id)} className={`sidebar-btn${active===item.id?" active":""}`} aria-label={item.tip} title={item.tip}>
+            <button key={item.id} type="button" onClick={()=>onChange(item.id)} className={`sidebar-btn${active===item.id?" active":""}`} aria-label={item.tip} title={item.tip}
+              style={{ width:collapsed?44:68,height:collapsed?44:52 }}>
               {item.icon}
-              <span className="sidebar-label">{item.short}</span>
+              {!collapsed && <span className="sidebar-label">{item.short}</span>}
             </button>
           ))}
         </nav>
@@ -1424,7 +1426,21 @@
             </div>
           </div>
 
-          {hoStatus==="idle" && <div style={{ borderRadius:8,border:`1px solid ${C.cyanDim}`,background:C.cyanDim,padding:14,fontSize:12,color:C.subtle }}>Generate a handover brief for the incoming shift — what fired, what was triaged, open items, and recommended watch points.</div>}
+          {hoStatus==="idle" && (
+            <div style={{ borderRadius:8,border:`1px solid rgba(34,211,238,0.2)`,background:C.cyanDim,padding:20,display:"flex",flexDirection:"column",alignItems:"center",gap:14,textAlign:"center" }}>
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" stroke={C.cyan} strokeWidth="1.5" strokeLinecap="round"/><circle cx="9" cy="7" r="4" stroke={C.cyan} strokeWidth="1.5"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" stroke={C.cyan} strokeWidth="1.5" strokeLinecap="round"/></svg>
+              <div>
+                <div style={{ fontSize:13,fontWeight:600,color:C.bright,marginBottom:6 }}>Ready to generate handover</div>
+                <div style={{ fontSize:12,color:C.subtle,lineHeight:1.7,maxWidth:360 }}>
+                  Creates a brief for the incoming analyst covering what fired, what was triaged, open items, and recommended watch points for the next shift.
+                </div>
+              </div>
+              <button type="button" onClick={generate} style={{ padding:"8px 24px",background:C.cyanDim,border:"1px solid rgba(34,211,238,0.4)",borderRadius:7,color:C.cyan,fontSize:12,fontFamily:"IBM Plex Mono",cursor:"pointer",display:"flex",alignItems:"center",gap:6 }}>
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21"/></svg>
+                Generate Handover Brief
+              </button>
+            </div>
+          )}
           {hoStatus==="loading" && (
             <div style={{ borderRadius:8,border:"1px solid rgba(34,211,238,0.2)",background:C.cyanDim,padding:14,display:"flex",flexDirection:"column",gap:8 }}>
               {["Reviewing alert queue...","Checking open incidents...","Assessing threat posture...","Writing handover brief..."].map((s,i)=>(
@@ -1556,7 +1572,7 @@
     }
 
     // ── Settings ──────────────────────────────────────────────────────────────
-    function SettingsPanel({ setSideTab }) {
+    function SettingsPanel({ setSideTab, sidebarMode, setSidebarMode }) {
       const [settingsTab, setSettingsTab] = useState("integrations");
 
       // ── Shared Toggle ────────────────────────────────────────────────────────
@@ -1593,7 +1609,7 @@
             {settingsTab==="integrations"  && <SettingsIntegrations Toggle={Toggle}/>}
             {settingsTab==="profile"       && <SettingsProfile Toggle={Toggle}/>}
             {settingsTab==="notifications" && <SettingsNotifications Toggle={Toggle}/>}
-            {settingsTab==="display"       && <SettingsDisplay Toggle={Toggle}/>}
+            {settingsTab==="display"       && <SettingsDisplay Toggle={Toggle} sidebarMode={sidebarMode} onSidebarModeChange={setSidebarMode}/>}
             {settingsTab==="about"         && <SettingsAbout setSideTab={setSideTab}/>}
           </div>
 
@@ -1843,7 +1859,7 @@
     }
 
     // ── Settings: Display ─────────────────────────────────────────────────────
-    function SettingsDisplay() {
+    function SettingsDisplay({ Toggle, sidebarMode:sbMode="expanded", onSidebarModeChange }) {
       const [theme,    setTheme]    = useState("navy");
       const [density,  setDensity]  = useState("comfortable");
       const [timezone, setTimezone] = useState("UTC");
@@ -1883,7 +1899,7 @@
               <Pills options={[["navy","Dark Navy"],["black","Deep Black"]]} value={theme} onChange={setTheme}/>
             </Row>
             <Row label="Sidebar">
-              <Pills options={[["expanded","Icons + Labels"],["collapsed","Icons Only"]]} value={sidebar} onChange={setSidebar}/>
+              <Pills options={[["expanded","Icons + Labels"],["collapsed","Icons Only"]]} value={sbMode} onChange={v=>{ onSidebarModeChange&&onSidebarModeChange(v); }}/>
             </Row>
             <Row label="Alert Queue Density">
               <Pills options={[["compact","Compact"],["comfortable","Comfortable"],["spacious","Spacious"]]} value={density} onChange={setDensity}/>
@@ -3052,6 +3068,7 @@
       const [showKeys,     setShowKeys]     = useState(false);
       const [showOnboard,  setShowOnboard]  = useState(()=>!localStorage.getItem("siq_onboarded"));
       const [showPicker,   setShowPicker]   = useState(false);
+      const [sidebarMode,  setSidebarMode]  = useState(()=>localStorage.getItem("siq_sidebar")||"expanded");
       const closeOnboard = () => { localStorage.setItem("siq_onboarded","1"); setShowOnboard(false); };
       const [search,    setSearch]    = useState("");
       const [filter,    setFilter]    = useState(null);
@@ -3327,16 +3344,16 @@
             <div className="header-feeds" style={{ display:"flex",alignItems:"center",gap:12,overflow:"hidden",flexWrap:"nowrap" }}>
               {FEEDS.map(f=>(
                 <div key={f.name} style={{ display:"flex",alignItems:"center",gap:5,flexShrink:0 }}>
-                  <Dot live={f.live} tip={f.tip}/>
+                  <Dot live={f.live} tip={f.tip} tipDown={true}/>
                   <span className="feed-label" style={{ fontSize:11,color:f.live?C.cyan:"#fbbf24",whiteSpace:"nowrap" }}>{f.name}</span>
                 </div>
               ))}
               <div style={{ display:"flex",alignItems:"center",gap:5,flexShrink:0 }}>
-                <Dot live={true} tip="AI Analyst active via Supabase"/>
+                <Dot live={true} tip="AI Analyst active via Supabase" tipDown={true}/>
                 <span className="feed-label" style={{ fontSize:11,color:C.green }}>AI Analyst</span>
               </div>
               <div style={{ display:"flex",alignItems:"center",gap:5,flexShrink:0 }}>
-                <Dot live={dbReady} tip={dbReady?"Alert persistence active":"Using local data"}/>
+                <Dot live={dbReady} tip={dbReady?"Alert persistence active":"Using local data"} tipDown={true}/>
                 <span className="feed-label" style={{ fontSize:11,color:dbReady?C.green:"#fbbf24" }}>Supabase</span>
               </div>
               <div style={{ display:"flex",alignItems:"center",gap:5,flexShrink:0 }}>
@@ -3357,7 +3374,7 @@
           <main id="main-content" style={{ flex:1,minHeight:0,display:"flex",overflow:"hidden" }}>
 
             {/* Sidebar */}
-            <Sidebar active={sideTab} onChange={setSideTab}/>
+            <Sidebar active={sideTab} onChange={setSideTab} mode={sidebarMode}/>
 
             {/* Dashboard — command center */}
             {sideTab==="dashboard" && <EB><div style={{ flex:1,minHeight:0,overflow:"hidden",display:"flex",flexDirection:"column" }}><DashboardOverview alerts={alerts} incidents={INCIDENTS_RAW} kevs={kevs} activity={activity} setSideTab={setSideTab}/></div></EB>}
@@ -3369,7 +3386,7 @@
             {sideTab==="reports" && <EB><div style={{ flex:1,minHeight:0,overflow:"hidden",display:"flex",flexDirection:"column" }}><ReportsPanel/></div></EB>}
 
             {/* Settings */}
-            {sideTab==="settings" && <EB><div style={{ flex:1,minHeight:0,overflow:"hidden",display:"flex",flexDirection:"column" }}><SettingsPanel setSideTab={setSideTab}/></div></EB>}
+            {sideTab==="settings" && <EB><div style={{ flex:1,minHeight:0,overflow:"hidden",display:"flex",flexDirection:"column" }}><SettingsPanel setSideTab={setSideTab} sidebarMode={sidebarMode} setSidebarMode={v=>{ setSidebarMode(v); localStorage.setItem("siq_sidebar",v); }}/></div></EB>}
 
             {/* Incident Management */}
             {sideTab==="incidents" && <EB><div style={{ flex:1,minHeight:0,overflow:"hidden",display:"flex",flexDirection:"column" }}><IncidentDashboard/></div></EB>}
