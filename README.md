@@ -13,7 +13,6 @@ Most cybersecurity portfolio projects are either too simple (a network scanner, 
 
 I also wanted the security to be real, not decorative. The backend validates every input, rate-limits by IP, keeps all API keys server-side, and returns only what the frontend actually needs. It's the kind of thing that comes up in interviews when someone asks "how do you think about secure design."
 
----
 
 ## What it does
 
@@ -31,8 +30,6 @@ I also wanted the security to be real, not decorative. The backend validates eve
 
 **Reports**: Four tabs: weekly AI threat summary (auto-generates when you open it), shift handover brief for the incoming analyst, GRC compliance snapshot, and individual incident reports you can export to PDF.
 
----
-
 ## Stack
 
 - React 18 via CDN, no build tools
@@ -44,7 +41,6 @@ I also wanted the security to be real, not decorative. The backend validates eve
 
 No webpack, no Next.js, no `node_modules`. The whole frontend is one HTML file. That made deployment simple and forced me to be deliberate about what I was actually building rather than configuring tooling.
 
----
 
 ## How the backend works
 
@@ -58,7 +54,6 @@ The IOC validator I'm actually proud of. Before any external call happens, the i
 
 The response extraction was a deliberate choice. AbuseIPDB returns a huge JSON object. I pull out maybe 8 fields and discard the rest. The browser never sees the raw response.
 
----
 
 ## Setup
 
@@ -91,7 +86,6 @@ Rename `sentineliq.html` to `index.html`, push to GitHub Pages.
 
 Set a monthly limit on Anthropic at console.anthropic.com. I use $10. The rate limiting handles abuse but the spend cap is the last line of defence.
 
----
 
 ## Files
 
@@ -102,7 +96,6 @@ setup.sql                   database schema + RLS policies
 README.md                   this file
 ```
 
----
 
 ## What I'd build next
 
@@ -110,7 +103,6 @@ Real auth via Supabase. Right now the analyst login is simulated with localStora
 
 Real-time sync via Supabase Realtime would come with that. Two browser tabs staying in sync as alerts get triaged.
 
----
 
 ## About
 
