@@ -259,7 +259,7 @@
               SentinelIQ simulates a Tier-1 Security Operations Center (SOC) dashboard. It demonstrates AI-assisted alert triage, live threat intelligence, and MITRE ATT&CK mapping — built as a cybersecurity portfolio project.
             </p>
             <div style={{ marginBottom:16 }}>
-              <div className="mono" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:8 }}>Tech Stack</div>
+              <div className="mono" role="heading" aria-level="2" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:8 }}>Tech Stack</div>
               {[["Frontend","React, Tailwind CSS, DM Sans + IBM Plex Mono"],["Backend","Supabase Edge Functions (Deno/TypeScript)"],["AI","Claude API (Anthropic) — secure proxy"],["Threat Intel","CISA KEV, AbuseIPDB, AlienVault OTX"],["Hosting","GitHub Pages + custom domain"]].map(([k,v])=>(
                 <div key={k} style={{ display:"flex",gap:10,marginBottom:6,fontSize:12 }}>
                   <span className="mono" style={{ color:C.subtle,width:90,flexShrink:0 }}>{k}</span>
@@ -268,7 +268,7 @@
               ))}
             </div>
             <div style={{ marginBottom:20 }}>
-              <div className="mono" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:8 }}>Concepts Demonstrated</div>
+              <div className="mono" role="heading" aria-level="2" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:8 }}>Concepts Demonstrated</div>
               <div style={{ display:"flex",gap:6,flexWrap:"wrap" }}>
                 {["AI Alert Triage","MITRE ATT&CK","IOC Enrichment","CORS Proxying","Secure API Design","Threat Intelligence","Incident Response","CISA KEV Integration"].map(t=>(
                   <span key={t} style={{ fontSize:11,padding:"3px 8px",borderRadius:20,border:`1px solid rgba(34,211,238,0.25)`,color:C.cyan,background:C.cyanDim }}>{t}</span>
@@ -629,7 +629,7 @@
 
                     {/* Timeline */}
                     <div style={{ marginBottom:12 }}>
-                      <div className="mono" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:10 }}>Timeline</div>
+                      <div className="mono" role="heading" aria-level="2" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:10 }}>Timeline</div>
                       <div style={{ position:"relative",paddingLeft:16 }}>
                         <div style={{ position:"absolute",left:6,top:6,bottom:6,width:1,background:C.border }}/>
                         {[...selInc.timeline].reverse().map((t,i)=>(
@@ -757,7 +757,7 @@
                 </div>
 
                 {/* Status distribution */}
-                <div className="mono" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:10 }}>By Status</div>
+                <div className="mono" role="heading" aria-level="2" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:10 }}>By Status</div>
                 {INC_STATUSES.map(s=>{
                   const count = incidents.filter(i=>i.status===s).length;
                   const sc2   = INC_STATUS_COLOR[s];
@@ -776,7 +776,7 @@
                 })}
 
                 {/* Severity breakdown */}
-                <div className="mono" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:10,marginTop:16 }}>By Severity</div>
+                <div className="mono" role="heading" aria-level="2" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:10,marginTop:16 }}>By Severity</div>
                 {["CRITICAL","HIGH","MEDIUM","LOW"].map(sev=>{
                   const count = incidents.filter(i=>i.severity===sev).length;
                   if (!count) return null;
@@ -795,7 +795,7 @@
                 })}
 
                 {/* Recent closed */}
-                <div className="mono" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:10,marginTop:16 }}>Recently Closed</div>
+                <div className="mono" role="heading" aria-level="2" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:10,marginTop:16 }}>Recently Closed</div>
                 {incidents.filter(i=>i.status==="Closed").map(i=>(
                   <button key={i.id} type="button" onClick={()=>setSelInc(i)}
                     style={{ width:"100%",textAlign:"left",padding:"7px 8px",borderRadius:5,marginBottom:4,background:"none",border:`1px solid ${C.border}`,cursor:"pointer",transition:"background 0.15s" }}
@@ -882,7 +882,7 @@
           {/* Alert volume 24h chart */}
           <div style={{ background:C.card,border:`1px solid ${C.border}`,borderRadius:12,padding:16 }}>
             <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12 }}>
-              <div className="mono" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em" }}>Alert Volume — Last 24h</div>
+              <div className="mono" role="heading" aria-level="2" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em" }}>Alert Volume — Last 24h</div>
               <span className="mono" style={{ fontSize:11,color:C.subtle }}>{alerts.length} total</span>
             </div>
             <div style={{ display:"flex",alignItems:"flex-end",gap:3,height:60 }}>
@@ -903,7 +903,7 @@
           <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:16 }}>
             <div style={{ background:C.card,border:`1px solid ${C.border}`,borderRadius:12,padding:16 }}>
               <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14 }}>
-                <div className="mono" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em" }}>Alert Distribution</div>
+                <div className="mono" role="heading" aria-level="2" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em" }}>Alert Distribution</div>
                 <button type="button" onClick={()=>setSideTab("alerts")} style={{ fontSize:11,color:C.cyan,background:"none",border:"none",cursor:"pointer",fontFamily:"IBM Plex Mono" }}>Triage →</button>
               </div>
               {["CRITICAL","HIGH","MEDIUM","LOW"].map(sev=>{
@@ -932,7 +932,7 @@
             </div>
             <div style={{ background:C.card,border:`1px solid ${C.border}`,borderRadius:12,padding:16 }}>
               <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10 }}>
-                <div className="mono" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em" }}>Open Incidents</div>
+                <div className="mono" role="heading" aria-level="2" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em" }}>Open Incidents</div>
                 <button type="button" onClick={()=>setSideTab("incidents")} style={{ fontSize:11,color:C.cyan,background:"none",border:"none",cursor:"pointer",fontFamily:"IBM Plex Mono" }}>View all →</button>
               </div>
               {incidents.filter(i=>i.status!=="Closed").slice(0,4).map(inc=>{
@@ -951,7 +951,7 @@
           {/* MITRE active + Latest KEVs */}
           <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:16 }}>
             <div style={{ background:C.card,border:`1px solid ${C.border}`,borderRadius:12,padding:16 }}>
-              <div className="mono" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:10 }}>Active MITRE Tactics</div>
+              <div className="mono" role="heading" aria-level="2" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:10 }}>Active MITRE Tactics</div>
               {MITRE_ACTIVE.map((t,i)=>{
                 const m = MITRE.find(m=>m.tactic===t);
                 return (
@@ -965,7 +965,7 @@
             </div>
             <div style={{ background:C.card,border:`1px solid ${C.border}`,borderRadius:12,padding:16 }}>
               <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10 }}>
-                <div className="mono" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em" }}>Latest KEVs</div>
+                <div className="mono" role="heading" aria-level="2" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em" }}>Latest KEVs</div>
                 <div style={{ display:"flex",alignItems:"center",gap:4 }}><Dot live={true}/><span style={{ fontSize:10,color:C.subtle }}>{kevs.length} loaded</span></div>
               </div>
               {kevs.slice(0,4).map((v,i)=>(
@@ -981,7 +981,7 @@
           {/* Activity feed summary */}
           <div style={{ background:C.card,border:`1px solid ${C.border}`,borderRadius:12,padding:16 }}>
             <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10 }}>
-              <div className="mono" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em" }}>Recent Activity</div>
+              <div className="mono" role="heading" aria-level="2" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em" }}>Recent Activity</div>
               <div style={{ display:"flex",alignItems:"center",gap:4 }}><Dot live={true}/><span style={{ fontSize:10,color:C.subtle }}>Live</span></div>
             </div>
             <div style={{ display:"flex",flexDirection:"column",gap:6 }}>
@@ -1137,7 +1137,7 @@
                 {/* Saved queries */}
                 {savedQueries.length>0 && (
                   <div>
-                    <div className="mono" style={{ fontSize:10,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:8 }}>Saved Queries</div>
+                    <div className="mono" role="heading" aria-level="2" style={{ fontSize:10,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:8 }}>Saved Queries</div>
                     <div style={{ display:"flex",gap:6,flexWrap:"wrap" }}>
                       {savedQueries.map((q,i)=>(
                         <div key={i} style={{ display:"flex",alignItems:"center",gap:0,background:C.card,border:`1px solid ${C.border}`,borderRadius:5,overflow:"hidden" }}>
@@ -1502,7 +1502,7 @@
           </div>
           {/* Per-function breakdown */}
           <div style={{ background:C.card,border:`1px solid ${C.border}`,borderRadius:10,padding:16,marginBottom:14 }}>
-            <div className="mono" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:14 }}>NIST CSF 2.0 Functions</div>
+            <div className="mono" role="heading" aria-level="2" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:14 }}>NIST CSF 2.0 Functions</div>
             {NIST_FUNCTIONS.map(fn=>{
               const fnControls = CONTROLS_RAW.filter(c=>c.fn===fn.id);
               const impl = fnControls.filter(c=>c.status==="Implemented").length;
@@ -1535,7 +1535,7 @@
     function ReportIncidents() {
       return (
         <div style={{ height:"100%",overflowY:"auto",padding:20 }}>
-          <div className="mono" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:14 }}>Incident Reports ({INCIDENTS_RAW.length})</div>
+          <div className="mono" role="heading" aria-level="2" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:14 }}>Incident Reports ({INCIDENTS_RAW.length})</div>
           <div style={{ display:"flex",flexDirection:"column",gap:8 }}>
             {INCIDENTS_RAW.map(inc=>{
               const ss  = INC_STATUS_COLOR[inc.status]||INC_STATUS_COLOR.New;
@@ -1748,7 +1748,7 @@
       return (
         <div style={{ height:"100%",overflowY:"auto",padding:20,maxWidth:540 }}>
           <div style={{ background:C.card,border:`1px solid ${C.border}`,borderRadius:10,padding:20,marginBottom:14 }}>
-            <div className="mono" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:16 }}>Analyst Profile</div>
+            <div className="mono" role="heading" aria-level="2" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:16 }}>Analyst Profile</div>
             {/* Avatar preview */}
             <div style={{ display:"flex",alignItems:"center",gap:14,marginBottom:20 }}>
               <div style={{ width:52,height:52,borderRadius:"50%",background:`linear-gradient(135deg,${C.cyan},${C.purple})`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0 }}>
@@ -1760,11 +1760,11 @@
                 <div style={{ fontSize:11,color:C.muted,marginTop:1 }}>{org}</div>
               </div>
             </div>
-            {[["Display Name","siq-name",name,setName,"text"],["Role / Title","siq-role",role,setRole,"text"],["Organization","siq-org",org,setOrg,"text"]].map(([label,id,val,setter])=>(
+            {[["Display Name","siq-name",name,setName,"text"],["Role / Title","siq-role",role,setRole,"text"],["Organization","siq-org",org,setOrg,"text"]].map(([label,id,val,setter,ariaLbl])=>(
               <div key={label} style={{ marginBottom:12 }}>
                 <label htmlFor={id} style={{ fontSize:12,color:C.subtle,display:"block",marginBottom:4 }}>{label}</label>
                 <input id={id} value={val} onChange={e=>setter(e.target.value)}
-                  style={{ width:"100%",background:"rgba(255,255,255,0.03)",border:`1px solid ${C.border}`,borderRadius:6,padding:"8px 12px",fontSize:13,color:C.bright,fontFamily:"DM Sans,sans-serif" }}/>
+                  aria-label={ariaLbl||label} style={{ width:"100%",background:"rgba(255,255,255,0.03)",border:`1px solid ${C.border}`,borderRadius:6,padding:"8px 12px",fontSize:13,color:C.bright,fontFamily:"DM Sans,sans-serif" }}/>
               </div>
             ))}
             <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:4 }}>
@@ -1775,7 +1775,7 @@
             </div>
           </div>
           <div style={{ background:C.card,border:`1px solid ${C.border}`,borderRadius:10,padding:16 }}>
-            <div className="mono" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:12 }}>Keyboard Shortcuts</div>
+            <div className="mono" role="heading" aria-level="2" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:12 }}>Keyboard Shortcuts</div>
             {[["j / ↓","Next alert"],["k / ↑","Previous alert"],["Escape","Deselect alert"],["/ ","Focus search"],["?","Shortcuts overlay"]].map(([k,v])=>(
               <div key={k} style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10 }}>
                 <span className="mono" style={{ fontSize:12,background:"rgba(255,255,255,0.06)",border:`1px solid ${C.border}`,borderRadius:4,padding:"2px 8px",color:C.cyan }}>{k}</span>
@@ -1804,7 +1804,7 @@
       return (
         <div style={{ height:"100%",overflowY:"auto",padding:20,maxWidth:540 }}>
           <div style={{ background:C.card,border:`1px solid ${C.border}`,borderRadius:10,padding:20,marginBottom:14 }}>
-            <div className="mono" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:14 }}>Alert Severity Threshold</div>
+            <div className="mono" role="heading" aria-level="2" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:14 }}>Alert Severity Threshold</div>
             <div style={{ display:"flex",gap:6,marginBottom:6 }}>
               {["Critical","High","Medium","Low"].map(l=>(
                 <button key={l} type="button" onClick={()=>setLevel(l)}
@@ -1817,7 +1817,7 @@
           </div>
 
           <div style={{ background:C.card,border:`1px solid ${C.border}`,borderRadius:10,padding:20,marginBottom:14 }}>
-            <div className="mono" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:14 }}>Notification Channels</div>
+            <div className="mono" role="heading" aria-level="2" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:14 }}>Notification Channels</div>
             {[["email","Email","analyst@company.com"],["slack","Slack","https://hooks.slack.com/..."],["pagerduty","PagerDuty","integration key"]].map(([k,label,ph])=>(
               <div key={k} style={{ marginBottom:14 }}>
                 <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6 }}>
@@ -1837,7 +1837,7 @@
           </div>
 
           <div style={{ background:C.card,border:`1px solid ${C.border}`,borderRadius:10,padding:20,marginBottom:14 }}>
-            <div className="mono" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:14 }}>Alert Frequency</div>
+            <div className="mono" role="heading" aria-level="2" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:14 }}>Alert Frequency</div>
             <div style={{ display:"flex",gap:6 }}>
               {["Immediate","Hourly Digest","Daily Summary"].map(f=>(
                 <button key={f} type="button" onClick={()=>setFreq(f)}
@@ -1880,12 +1880,12 @@
           {children}
         </div>
       );
-      const Pills = ({options, value, onChange}) => (
-        <div style={{ display:"flex",gap:6,flexWrap:"wrap" }}>
-          {options.map(([k,label])=>(
-            <button key={k} type="button" onClick={()=>onChange(k)}
+      const Pills = ({options, value, onChange, label:grpLabel}) => (
+        <div role="radiogroup" aria-label={grpLabel} style={{ display:"flex",gap:6,flexWrap:"wrap" }}>
+          {options.map(([k,lbl])=>(
+            <button key={k} type="button" role="radio" aria-checked={value===k} onClick={()=>onChange(k)}
               style={{ padding:"5px 14px",borderRadius:5,fontSize:11,cursor:"pointer",border:`1px solid ${value===k?C.cyan:C.border}`,background:value===k?C.cyanDim:"none",color:value===k?C.cyan:C.subtle,fontFamily:"IBM Plex Mono" }}>
-              {label||k}
+              {lbl||k}
             </button>
           ))}
         </div>
@@ -1894,7 +1894,7 @@
       return (
         <div style={{ height:"100%",overflowY:"auto",padding:20,maxWidth:540 }}>
           <div style={{ background:C.card,border:`1px solid ${C.border}`,borderRadius:10,padding:20,marginBottom:14 }}>
-            <div className="mono" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:16 }}>Display Preferences</div>
+            <div className="mono" role="heading" aria-level="2" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:16 }}>Display Preferences</div>
             <Row label="Theme">
               <Pills options={[["navy","Dark Navy"],["black","Deep Black"]]} value={theme} onChange={setTheme}/>
             </Row>
@@ -1911,7 +1911,7 @@
               <Pills options={[["30s","30s"],["1m","1m"],["5m","5m"],["off","Manual"]]} value={refresh} onChange={setRefresh}/>
             </Row>
             <Row label="Clock Timezone">
-              <select value={timezone} onChange={e=>setTimezone(e.target.value)}
+              <select id="tz-select" aria-label="Clock timezone" value={timezone} onChange={e=>setTimezone(e.target.value)}
                 style={{ background:C.card,border:`1px solid ${C.border}`,borderRadius:6,padding:"6px 10px",fontSize:12,color:C.text,fontFamily:"IBM Plex Mono",cursor:"pointer" }}>
                 {["UTC","EST (UTC-5)","PST (UTC-8)","BST (UTC+1)","CST (UTC+8)","EAT (UTC+3)"].map(tz=><option key={tz}>{tz}</option>)}
               </select>
@@ -1968,7 +1968,7 @@
           </div>
 
           <div style={{ background:C.card,border:`1px solid ${C.border}`,borderRadius:10,padding:16,marginBottom:14 }}>
-            <div className="mono" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:12 }}>Platform Roadmap</div>
+            <div className="mono" role="heading" aria-level="2" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:12 }}>Platform Roadmap</div>
             {[["Phase 1","Threat Dashboard","LIVE",C.cyan],["Phase 2","AI Analyst Agent","LIVE",C.green],["Phase 3","GRC Tracker","LIVE",C.green],["Phase 4","Incident Mgmt","LIVE",C.green],["Phase 5","Live Data + SOAR","LIVE",C.green]].map(([p,n,s,c])=>(
               <div key={p} style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8 }}>
                 <div style={{ fontSize:12 }}><span className="mono" style={{ color:C.muted }}>{p} </span><span style={{ color:C.secondary }}>{n}</span></div>
@@ -1978,7 +1978,7 @@
           </div>
 
           <div style={{ background:C.card,border:`1px solid ${C.border}`,borderRadius:10,padding:16,marginBottom:14 }}>
-            <div className="mono" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:12 }}>Built By</div>
+            <div className="mono" role="heading" aria-level="2" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:12 }}>Built By</div>
             <div style={{ fontSize:13,fontWeight:600,color:C.bright,marginBottom:6 }}>Mohamed Mohamud</div>
             <div style={{ fontSize:12,color:C.subtle,marginBottom:10,lineHeight:1.7 }}>CompTIA Security+ · MS Business Analytics, Franklin University · Founder, Kulan Group Ltd · Columbus, OH</div>
             <div style={{ display:"flex",gap:8,flexWrap:"wrap",marginBottom:12 }}>
@@ -2310,7 +2310,7 @@
                 </div>
 
                 {/* Per-function breakdown */}
-                <div className="mono" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:10 }}>By Function</div>
+                <div className="mono" role="heading" aria-level="2" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:10 }}>By Function</div>
                 {NIST_FUNCTIONS.map(fn=>{
                   const fnCtrls = controls.filter(c=>c.fn===fn.id);
                   const fnImpl  = fnCtrls.filter(c=>c.status==="Implemented").length;
@@ -2330,7 +2330,7 @@
 
                 {/* Framework selector */}
                 <div style={{ marginTop:16,background:C.card,border:`1px solid ${C.border}`,borderRadius:8,padding:12 }}>
-                  <div className="mono" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:8 }}>Frameworks</div>
+                  <div className="mono" role="heading" aria-level="2" style={{ fontSize:11,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:8 }}>Frameworks</div>
                   {[["NIST CSF 2.0","Active",C.cyan],["ISO 27001","Phase 4",C.muted],["SOC 2 Type II","Phase 4",C.muted]].map(([f,s,c])=>(
                     <div key={f} style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6 }}>
                       <span style={{ fontSize:12,color:C.text }}>{f}</span>
@@ -2400,12 +2400,12 @@
             <div className="fade-in" style={{ display:"flex",flexDirection:"column",gap:10 }}>
               <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:8 }}>
                 <div style={{ borderRadius:8,border:`1px solid ${vc.b}`,background:vc.bg,padding:12 }}>
-                  <div className="mono" style={{ fontSize:10,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:4 }}>Verdict</div>
+                  <div className="mono" role="heading" aria-level="2" style={{ fontSize:10,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:4 }}>Verdict</div>
                   <div className="mono" style={{ fontSize:15,fontWeight:700,color:vc.c }}>{parsed.verdict?.replace("_"," ")}</div>
                   <div style={{ fontSize:11,color:C.subtle,marginTop:2 }}>Confidence: {parsed.confidence}%</div>
                 </div>
                 <div style={{ borderRadius:8,border:`1px solid ${C.border}`,background:C.card,padding:12 }}>
-                  <div className="mono" style={{ fontSize:10,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:4 }}>Priority</div>
+                  <div className="mono" role="heading" aria-level="2" style={{ fontSize:10,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:4 }}>Priority</div>
                   <div className="mono" style={{ fontSize:26,fontWeight:700,color:parsed.priority_score>=8?"#f87171":parsed.priority_score>=5?"#fbbf24":C.green }}>{parsed.priority_score}<span style={{ fontSize:13,color:C.muted }}>/10</span></div>
                   {parsed.escalate && <div style={{ fontSize:11,color:"#f87171",marginTop:2 }}>⚠ Escalate now</div>}
                 </div>
@@ -2418,17 +2418,17 @@
               ))}
               <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:8 }}>
                 <div style={{ borderRadius:8,border:`1px solid ${C.border}`,background:C.card,padding:12 }}>
-                  <div className="mono" style={{ fontSize:10,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:6 }}>MITRE ATT&CK</div>
+                  <div className="mono" role="heading" aria-level="2" style={{ fontSize:10,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:6 }}>MITRE ATT&CK</div>
                   <div className="mono" style={{ fontSize:12,color:C.bright,marginBottom:3 }}>{parsed.mitre_tactic}</div>
                   <div style={{ fontSize:11,color:C.secondary }}>{parsed.mitre_technique}</div>
                 </div>
                 <div style={{ borderRadius:8,border:`1px solid ${C.border}`,background:C.card,padding:12 }}>
-                  <div className="mono" style={{ fontSize:10,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:6 }}>Root Cause</div>
+                  <div className="mono" role="heading" aria-level="2" style={{ fontSize:10,color:C.subtle,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:6 }}>Root Cause</div>
                   <div style={{ fontSize:12,color:C.text,lineHeight:1.6 }}>{parsed.root_cause}</div>
                 </div>
               </div>
               <div style={{ borderRadius:8,border:`1px solid rgba(167,139,250,0.2)`,background:C.purpleDim,padding:12 }}>
-                <div className="mono" style={{ fontSize:10,color:C.purple,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:10 }}>Recommended Actions</div>
+                <div className="mono" role="heading" aria-level="2" style={{ fontSize:10,color:C.purple,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:10 }}>Recommended Actions</div>
                 {parsed.recommended_actions?.map((a,i)=>(
                   <div key={i} style={{ display:"flex",alignItems:"flex-start",gap:8,marginBottom:8 }}>
                     <span className="mono" style={{ width:18,height:18,borderRadius:"50%",background:C.purpleDim,border:`1px solid rgba(167,139,250,0.3)`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,color:C.purple,flexShrink:0,marginTop:1 }}>{i+1}</span>
@@ -2728,7 +2728,7 @@
             </button>
           </div>
           <label htmlFor={`note-${alert?.id}`} style={{ position:"absolute",width:1,height:1,overflow:"hidden",clip:"rect(0,0,0,0)" }}>Analyst notes for {alert?.id}</label>
-          <textarea id={`note-${alert?.id}`} value={note} onChange={e=>setNote(e.target.value)}
+          <textarea id={`note-${alert?.id}`} aria-label={`Analyst notes for alert ${alert?.id}`} value={note} onChange={e=>setNote(e.target.value)}
             placeholder="Document your analysis, findings, or actions taken..."
             rows={4}
             style={{ width:"100%",background:C.card,border:`1px solid ${C.border}`,borderRadius:6,padding:"8px 12px",fontSize:12,color:C.bright,fontFamily:"DM Sans,sans-serif",lineHeight:1.6,resize:"vertical",transition:"border 0.15s" }}
@@ -3341,7 +3341,7 @@
               <span className="header-title-sub" style={{ fontSize:11,color:C.muted,whiteSpace:"nowrap" }}>SOC Platform v2.0</span>
               <span style={{ fontSize:11,fontFamily:"IBM Plex Mono",padding:"2px 8px",borderRadius:4,background:`${threatColor}18`,border:`1px solid ${threatColor}40`,color:threatColor,whiteSpace:"nowrap" }}>● {threatLevel}</span>
             </div>
-            <div className="header-feeds" style={{ display:"flex",alignItems:"center",gap:12,overflow:"hidden",flexWrap:"nowrap" }}>
+            <div className="header-feeds" style={{ display:"flex",alignItems:"center",gap:12,overflow:"visible",flexWrap:"nowrap" }}>
               {FEEDS.map(f=>(
                 <div key={f.name} style={{ display:"flex",alignItems:"center",gap:5,flexShrink:0 }}>
                   <Dot live={f.live} tip={f.tip} tipDown={true}/>
